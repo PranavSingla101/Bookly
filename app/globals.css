@@ -47,73 +47,116 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ============================================================
+   Light Mode
+   ============================================================ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --background: #f5f5f5;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+  --primary: #2a2a2a;
+  --primary-foreground: #fafafa;
+  --secondary: #e8e8e8;
+  --secondary-foreground: #1a1a1a;
+  --muted: #e8e8e8;
+  --muted-foreground: #737373;
+  --accent: #e8e8e8;
+  --accent-foreground: #1a1a1a;
+  --destructive: #e74c3c;
+  --border: #d4d4d4;
+  --input: #d4d4d4;
+  --ring: #a1a1a1;
+  --radius: 0.5rem;
+
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  --sidebar: #fafafa;
+  --sidebar-foreground: #1a1a1a;
+  --sidebar-primary: #2a2a2a;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #e8e8e8;
+  --sidebar-accent-foreground: #1a1a1a;
+  --sidebar-border: #d4d4d4;
+  --sidebar-ring: #a1a1a1;
+
+  /* Custom app vars */
+  --lib-bg: #e8e5e0;
+  --lib-navbar-bg: #dddad5;
+  --lib-card-bg: #d5d2cd;
+  --lib-text-primary: #2a2a2a;
+  --lib-text-secondary: #6b6b6b;
+  --lib-text-muted: #999999;
+  --lib-border: #c5c2bd;
+  --lib-hover: rgba(0, 0, 0, 0.06);
+  --lib-separator: #b5b2ad;
+  --lib-add-card-bg: #ccc9c4;
+  --lib-add-card-border: #b8b5b0;
+  --lib-search-bg: transparent;
+  --lib-search-text: #2a2a2a;
+  --lib-search-placeholder: #8a8a8a;
 }
 
+/* ============================================================
+   Dark Mode
+   ============================================================ */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --background: #3a3a3a;
+  --foreground: #e0e0e0;
+  --card: #2a2a2a;
+  --card-foreground: #e0e0e0;
+  --popover: #2a2a2a;
+  --popover-foreground: #e0e0e0;
+  --primary: #d4d4d4;
+  --primary-foreground: #1a1a1a;
+  --secondary: #3a3a3a;
+  --secondary-foreground: #e0e0e0;
+  --muted: #3a3a3a;
+  --muted-foreground: #a0a0a0;
+  --accent: #3a3a3a;
+  --accent-foreground: #e0e0e0;
+  --destructive: #e74c3c;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #666;
+  --radius: 0.5rem;
+
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
+
+  --sidebar: #2a2a2a;
+  --sidebar-foreground: #e0e0e0;
   --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-primary-foreground: #e0e0e0;
+  --sidebar-accent: #3a3a3a;
+  --sidebar-accent-foreground: #e0e0e0;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #666;
+
+  /* Custom app vars */
+  --lib-bg: #4a4a4a;
+  --lib-navbar-bg: #3d3d3d;
+  --lib-card-bg: #3a3a3a;
+  --lib-text-primary: #d4d4d4;
+  --lib-text-secondary: #a0a0a0;
+  --lib-text-muted: #777;
+  --lib-border: #555;
+  --lib-hover: rgba(255, 255, 255, 0.08);
+  --lib-separator: #666;
+  --lib-add-card-bg: #444;
+  --lib-add-card-border: #555;
+  --lib-search-bg: transparent;
+  --lib-search-text: #d4d4d4;
+  --lib-search-placeholder: #888;
 }
 
 @layer base {
@@ -126,4 +169,396 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ============================================================
+   LIBRARY PAGE
+   ============================================================ */
+.library-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--lib-bg);
+}
+
+/* ============================================================
+   NAVBAR
+   ============================================================ */
+.navbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  background-color: transparent;
+  border-bottom: none;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  min-height: 38px;
+  gap: 12px;
+}
+
+.navbar-inner {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.navbar-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-logo {
+  flex: 0 0 auto;
+}
+
+.navbar-center {
+  flex: 1 1 auto;
+  max-width: 640px;
+}
+
+.navbar-logo-img {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: block;
+}
+
+.navbar-search-wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  border: 1px solid var(--lib-border);
+  border-radius: 999px;
+  background: transparent;
+}
+
+.navbar-search-icon {
+  position: absolute;
+  left: 10px;
+  width: 14px;
+  height: 14px;
+  color: var(--lib-text-muted);
+  pointer-events: none;
+}
+
+.navbar-search-input {
+  width: 100%;
+  height: 28px;
+  padding: 0 14px 0 32px;
+  font-size: 12.5px;
+  font-family: inherit;
+  color: var(--lib-search-text);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  outline: none;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.navbar-search-input::placeholder {
+  color: var(--lib-search-placeholder);
+}
+
+.navbar-search-input:focus {
+  background: transparent;
+}
+
+.navbar-search-wrapper:focus-within {
+  border-color: var(--lib-text-secondary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--lib-text-secondary) 20%, transparent);
+}
+
+.navbar-pipe {
+  color: var(--lib-separator);
+  margin: 0 12px;
+  user-select: none;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.navbar-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--lib-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.navbar-icon-btn:hover {
+  background: var(--lib-hover);
+  color: var(--lib-text-primary);
+}
+
+.navbar-separator {
+  width: 1px;
+  height: 18px;
+  background: var(--lib-separator);
+  margin: 0 4px;
+}
+
+/* ============================================================
+   LIBRARY GRID
+   ============================================================ */
+.library-grid-container {
+  flex: 1;
+  padding: 20px 16px;
+  overflow-y: auto;
+}
+
+.library-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+/* ============================================================
+   BOOK CARD
+   ============================================================ */
+.book-card {
+  display: flex;
+  flex-direction: column;
+  width: 120px;
+  color: inherit;
+  transition: transform 0.18s ease;
+}
+
+.book-card:hover {
+  transform: translateY(-2px);
+}
+
+.book-card-cover {
+  position: relative;
+  width: 120px;
+  height: 165px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--lib-card-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.book-card-cover-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.book-card-cover-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.book-card-cover-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  text-align: center;
+  color: var(--lib-text-muted);
+}
+
+.book-card-cover-placeholder-icon {
+  width: 28px;
+  height: 28px;
+  opacity: 0.4;
+  margin-bottom: 6px;
+}
+
+.book-card-cover-placeholder-title {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Hover overlay */
+.book-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.2s;
+  backdrop-filter: blur(2px);
+}
+
+.book-card:hover .book-card-overlay {
+  opacity: 1;
+}
+
+.book-card-read-btn {
+  font-size: 11px;
+}
+
+.book-card-delete-btn {
+  padding: 4px 12px;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(220, 50, 50, 0.7);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.book-card-delete-btn:hover {
+  background: rgba(220, 50, 50, 0.95);
+}
+
+/* Card info area */
+.book-card-info {
+  padding: 5px 2px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.book-card-title {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--lib-text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   ADD BOOK CARD
+   ============================================================ */
+.add-book-card {
+  display: flex;
+  flex-direction: column;
+  width: 120px;
+  height: 165px;
+  border: 1.5px dashed var(--lib-add-card-border);
+  border-radius: 3px;
+  background: var(--lib-add-card-bg);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  padding: 0;
+}
+
+.add-book-card:hover {
+  border-color: var(--lib-text-secondary);
+  background: var(--lib-hover);
+}
+
+.add-book-card-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--lib-text-muted);
+  transition: color 0.15s;
+}
+
+.add-book-card:hover .add-book-card-inner {
+  color: var(--lib-text-primary);
+}
+
+/* ============================================================
+   EPUB READER (epub.js + public package.opf URL)
+   ============================================================ */
+.epub-read-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--lib-bg);
+  color: var(--lib-text-primary);
+  overflow: hidden;
+}
+
+.epub-read-toolbar {
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background-color: var(--lib-bg);
+}
+
+.epub-read-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.epub-read-status {
+  padding: 24px 16px;
+  font-size: 14px;
+  color: var(--lib-text-muted);
+}
+
+.epub-read-error {
+  color: var(--destructive);
+}
+
+.epub-reader-host {
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  background-color: var(--lib-bg);
+}
+
+.epub-reader-host .epub-container {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.epub-reader-host iframe {
+  border: none;
+  display: block;
+  width: 100% !important;
+  max-width: 100%;
+}
+
+/* epub.js injects a #viewer or epubjs-container div */
+.epub-reader-host > div {
+  width: 100% !important;
+  height: 100% !important;
 }
