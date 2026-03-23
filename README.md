@@ -1,36 +1,164 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# eLib
 
-## Getting Started
+eLib is a personal cloud-backed ebook library built with Next.js, React, Clerk, and Supabase.  
+Users can upload EPUB files, manage their library, and read books with synchronized progress.
 
-First, run the development server:
+This README is intentionally detailed so it remains useful as the project grows.
+
+## Tech Stack
+
+- Next.js 16 (App Router + Route Handlers)
+- React 19
+- TypeScript
+- Tailwind CSS v4
+- Clerk (authentication)
+- Supabase (database + storage)
+- Zustand (client state)
+- epub.js (reader engine)
+
+## Current Features
+
+- Clerk-based sign-in and sign-up flows
+- Protected user library page
+- Upload EPUB files through API routes
+- Parse and read EPUB content
+- Persist books in Supabase-backed storage model
+- Save and restore reading progress
+
+## Project Structure
+
+```text
+app/
+  api/books/...                # Server routes for books, upload, annotations, progress
+  library/                     # Library and reading pages
+  sign-in/, sign-up/           # Clerk auth routes
+components/
+  library/                     # Reader + library UI components
+  layout/                      # Navbar and layout pieces
+  ui/                          # Reusable UI primitives
+lib/
+  auth/                        # Auth helpers
+  books/                       # Book DTO + API utilities
+  epub/                        # EPUB parsing/building helpers
+  supabase/                    # Supabase server/storage utilities
+store/                         # Client state stores
+supabase/                      # SQL/migration or infra-related files
+```
+
+## Prerequisites
+
+- Node.js 20+
+- npm 10+ (or compatible package manager)
+- Clerk app keys
+- Supabase project URL and service role key
+
+## Environment Variables
+
+Copy `.env.example` to `.env.local` and fill values:
+
+```bash
+cp .env.example .env.local
+```
+
+Required keys:
+
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `CLERK_SECRET_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `NEXT_PUBLIC_SUPABASE_URL` (same value as `SUPABASE_URL`)
+
+Notes:
+
+- Keep `SUPABASE_SERVICE_ROLE_KEY` server-only.
+- Never commit real `.env*` files.
+
+## Local Development
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Other scripts:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run build` - Production build
+- `npm run start` - Run production build
+- `npm run lint` - Run ESLint
 
-## Learn More
+## Data and API Notes
 
-To learn more about Next.js, take a look at the following resources:
+Main API surface:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `GET /api/books`
+- `POST /api/books/upload`
+- `DELETE /api/books/:id`
+- `GET /api/books/:id`
+- `GET /api/books/:id/annotations`
+- `POST /api/books/:id/annotations`
+- `DELETE /api/books/:id/annotations/:annotationId`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Auth model:
 
-## Deploy on Vercel
+- Clerk identifies the current user.
+- Server-side handlers mediate Supabase access.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Storage model:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Book files are stored in Supabase storage.
+- Metadata/progress is stored in Supabase tables.
+
+## Future Roadmap
+
+This section is the long-term reference for planned work.
+
+### Near Term
+
+- Improve upload reliability and partial-failure cleanup
+- Strengthen progress sync debounce and flush behavior
+- Expand API validation and error consistency
+- Add better loading/error UI states in reader flows
+
+### Mid Term
+
+- Richer annotations and highlight UX
+- Cross-device sync hardening and conflict handling
+- Search/filter/sort in large libraries
+- Better offline caching strategy for previously opened books
+
+### Long Term
+
+- Multi-format support (beyond EPUB)
+- Sharing/collaboration options
+- Reading analytics and insights
+- Background processing pipeline for heavy parsing tasks
+
+## Testing Checklist (Manual)
+
+- Auth-protected routes reject unauthenticated access
+- A user cannot access another user's books
+- Upload appears after refresh/re-login
+- Progress resumes from latest saved position
+- Delete removes both metadata and underlying file reference
+- Reader still loads when local cache is missing
+
+## Important Contributor Note
+
+Project-specific agent rules require checking Next.js docs in:
+
+`node_modules/next/dist/docs/`
+
+before implementing behavior that depends on framework conventions, because this project targets a version with potential breaking changes.
+
+## License
+
+No license file is currently defined. Add one before open-source distribution.
