@@ -1,23 +1,23 @@
+/**
+ * This route handles read, delete, and reading-progress updates for one owned
+ * book. It centralizes ownership checks and coordinates book row updates plus
+ * related storage cleanup when a book is removed.
+ */
 import { NextResponse } from "next/server";
 import { requireUserProfile } from "@/lib/auth/requireUserProfile";
+import { BOOKS_BUCKET } from "@/lib/api/books/constants";
+import { handleCommonApiError } from "@/lib/api/books/errors";
+import { fetchOwnedBook } from "@/lib/api/books/books";
+import { parseProgressInput } from "@/lib/api/books/progress";
 import { mapDbBookToBookDto } from "@/lib/books/dto";
 import { removeStorageFolderPrefix } from "@/lib/supabase/storageTree";
-
-const BOOKS_BUCKET = "books";
-const MIN_PROGRESS = 0;
-const MAX_PROGRESS = 100;
 
 export async function GET(_request: Request, props: RouteContext<"/api/books/[id]">) {
   try {
     const { supabase, profileId } = await requireUserProfile();
     const { id } = await props.params;
 
-    const { data: row, error } = await supabase
-      .from("books")
-      .select("*")
-      .eq("id", id)
-      .eq("profile_id", profileId)
-      .single();
+    const { data: row, error } = await fetchOwnedBook(supabase, id, profileId);
 
     if (error || !row) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
@@ -25,10 +25,7 @@ export async function GET(_request: Request, props: RouteContext<"/api/books/[id
 
     return NextResponse.json({ book: mapDbBookToBookDto(row) });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
+    return handleCommonApiError(error);
   }
 }
 
@@ -37,12 +34,7 @@ export async function DELETE(_request: Request, props: RouteContext<"/api/books/
     const { supabase, profileId } = await requireUserProfile();
     const { id } = await props.params;
 
-    const { data: existing, error: fetchError } = await supabase
-      .from("books")
-      .select("*")
-      .eq("id", id)
-      .eq("profile_id", profileId)
-      .single();
+    const { data: existing, error: fetchError } = await fetchOwnedBook(supabase, id, profileId);
 
     if (fetchError || !existing) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
@@ -79,17 +71,8 @@ export async function DELETE(_request: Request, props: RouteContext<"/api/books/
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
+    return handleCommonApiError(error);
   }
-}
-
-interface ProgressPatchBody {
-  cfi?: unknown;
-  progress?: unknown;
-  updatedAt?: unknown;
 }
 
 export async function PATCH(request: Request, props: RouteContext<"/api/books/[id]">) {
@@ -97,37 +80,18 @@ export async function PATCH(request: Request, props: RouteContext<"/api/books/[i
     const { supabase, profileId } = await requireUserProfile();
     const { id } = await props.params;
 
-    let body: ProgressPatchBody;
-    try {
-      body = (await request.json()) as ProgressPatchBody;
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    const parsed = await parseProgressInput(request);
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
+    const { cfi, progress, clientUpdatedAt } = parsed.data;
 
-    const cfi = typeof body.cfi === "string" ? body.cfi.trim() : "";
-    if (!cfi) {
-      return NextResponse.json({ error: "Missing cfi" }, { status: 400 });
-    }
-
-    const progress =
-      typeof body.progress === "number" && Number.isFinite(body.progress)
-        ? Math.min(MAX_PROGRESS, Math.max(MIN_PROGRESS, body.progress))
-        : null;
-
-    const clientUpdatedAt =
-      typeof body.updatedAt === "string" && body.updatedAt.trim()
-        ? new Date(body.updatedAt)
-        : null;
-    if (clientUpdatedAt && Number.isNaN(clientUpdatedAt.getTime())) {
-      return NextResponse.json({ error: "Invalid updatedAt timestamp" }, { status: 400 });
-    }
-
-    const { data: current, error: fetchError } = await supabase
-      .from("books")
-      .select("id, profile_id, reading_updated_at")
-      .eq("id", id)
-      .eq("profile_id", profileId)
-      .single();
+    const { data: current, error: fetchError } = await fetchOwnedBook(
+      supabase,
+      id,
+      profileId,
+      "id, profile_id, reading_updated_at"
+    );
 
     if (fetchError || !current) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
@@ -158,14 +122,11 @@ export async function PATCH(request: Request, props: RouteContext<"/api/books/[i
       .single();
 
     if (updateError || !updatedRow) {
-      return NextResponse.json({ error: "Failed to update reading progress" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to update book progress" }, { status: 500 });
     }
 
     return NextResponse.json({ book: mapDbBookToBookDto(updatedRow) });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
+    return handleCommonApiError(error);
   }
 }

@@ -1,23 +1,20 @@
+/**
+ * This route lists and creates annotations for a single owned book. It checks
+ * that the book belongs to the signed-in profile and then returns or inserts
+ * annotation records scoped to that same profile and book.
+ */
 import { NextResponse } from "next/server";
 import { requireUserProfile } from "@/lib/auth/requireUserProfile";
-
-interface AnnotationBody {
-  cfiRange?: unknown;
-  type?: unknown;
-  payload?: unknown;
-}
+import { handleCommonApiError } from "@/lib/api/books/errors";
+import { fetchOwnedBook } from "@/lib/api/books/books";
+import { parseAnnotationCreateInput } from "@/lib/api/books/annotations";
 
 export async function GET(_request: Request, props: RouteContext<"/api/books/[id]/annotations">) {
   try {
     const { supabase, profileId } = await requireUserProfile();
     const { id } = await props.params;
 
-    const { data: book, error: bookError } = await supabase
-      .from("books")
-      .select("id")
-      .eq("id", id)
-      .eq("profile_id", profileId)
-      .single();
+    const { data: book, error: bookError } = await fetchOwnedBook(supabase, id, profileId, "id");
 
     if (bookError || !book) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
@@ -36,10 +33,7 @@ export async function GET(_request: Request, props: RouteContext<"/api/books/[id
 
     return NextResponse.json({ annotations: data ?? [] });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
+    return handleCommonApiError(error);
   }
 }
 
@@ -48,30 +42,13 @@ export async function POST(request: Request, props: RouteContext<"/api/books/[id
     const { supabase, profileId } = await requireUserProfile();
     const { id } = await props.params;
 
-    let body: AnnotationBody;
-    try {
-      body = (await request.json()) as AnnotationBody;
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    const parsed = await parseAnnotationCreateInput(request);
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
+    const { cfiRange, annotationType, payload } = parsed.data;
 
-    const cfiRange = typeof body.cfiRange === "string" ? body.cfiRange.trim() : "";
-    const annotationType = typeof body.type === "string" ? body.type.trim() : "";
-    if (!cfiRange || !annotationType) {
-      return NextResponse.json({ error: "Missing cfiRange or type" }, { status: 400 });
-    }
-
-    const payload =
-      body.payload && typeof body.payload === "object" && !Array.isArray(body.payload)
-        ? body.payload
-        : {};
-
-    const { data: book, error: bookError } = await supabase
-      .from("books")
-      .select("id")
-      .eq("id", id)
-      .eq("profile_id", profileId)
-      .single();
+    const { data: book, error: bookError } = await fetchOwnedBook(supabase, id, profileId, "id");
 
     if (bookError || !book) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
@@ -97,9 +74,6 @@ export async function POST(request: Request, props: RouteContext<"/api/books/[id
 
     return NextResponse.json({ annotation: data }, { status: 201 });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
+    return handleCommonApiError(error);
   }
 }

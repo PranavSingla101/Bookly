@@ -1,4 +1,8 @@
-// Epub Reader Library page provides upload + delete for stored EPUB books.
+/**
+ * This page shows the user's cloud library grid and manages core book actions:
+ * initial fetch, EPUB upload, and book removal. It hydrates the Zustand store
+ * from API data and renders the library card interface.
+ */
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -59,7 +63,7 @@ export default function LibraryPage() {
       });
       addBook(book);
     } catch (error) {
-      console.error("Failed to process EPUB file:", error);
+      console.error("Failed to process uploaded file:", error);
     } finally {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";

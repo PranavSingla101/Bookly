@@ -1,11 +1,12 @@
+/**
+ * This route updates or deletes a single annotation belonging to a specific
+ * book for the authenticated user. It enforces ownership through profile and
+ * book filters before mutating rows in the annotations table.
+ */
 import { NextResponse } from "next/server";
 import { requireUserProfile } from "@/lib/auth/requireUserProfile";
-
-interface AnnotationPatchBody {
-  cfiRange?: unknown;
-  type?: unknown;
-  payload?: unknown;
-}
+import { handleCommonApiError } from "@/lib/api/books/errors";
+import { parseAnnotationPatchInput } from "@/lib/api/books/annotations";
 
 export async function PATCH(
   request: Request,
@@ -15,31 +16,11 @@ export async function PATCH(
     const { supabase, profileId } = await requireUserProfile();
     const { id, annotationId } = await props.params;
 
-    let body: AnnotationPatchBody;
-    try {
-      body = (await request.json()) as AnnotationPatchBody;
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    const parsed = await parseAnnotationPatchInput(request);
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
-
-    const update: {
-      cfi_range?: string;
-      annotation_type?: string;
-      payload?: object;
-      updated_at: string;
-    } = {
-      updated_at: new Date().toISOString(),
-    };
-
-    if (typeof body.cfiRange === "string" && body.cfiRange.trim()) {
-      update.cfi_range = body.cfiRange.trim();
-    }
-    if (typeof body.type === "string" && body.type.trim()) {
-      update.annotation_type = body.type.trim();
-    }
-    if (body.payload && typeof body.payload === "object" && !Array.isArray(body.payload)) {
-      update.payload = body.payload as object;
-    }
+    const update = parsed.data;
 
     const { data, error } = await supabase
       .from("book_annotations")
@@ -56,10 +37,7 @@ export async function PATCH(
 
     return NextResponse.json({ annotation: data });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
+    return handleCommonApiError(error);
   }
 }
 
@@ -84,9 +62,6 @@ export async function DELETE(
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
+    return handleCommonApiError(error);
   }
 }

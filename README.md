@@ -1,7 +1,7 @@
 # eLib
 
 eLib is a personal cloud-backed ebook library built with Next.js, React, Clerk, and Supabase.  
-Users can upload EPUB files, manage their library, and read books with synchronized progress.
+Users can upload files and manage their library.
 
 This README is intentionally detailed so it remains useful as the project grows.
 
@@ -14,32 +14,29 @@ This README is intentionally detailed so it remains useful as the project grows.
 - Clerk (authentication)
 - Supabase (database + storage)
 - Zustand (client state)
-- epub.js (reader engine)
 
 ## Current Features
 
 - Clerk-based sign-in and sign-up flows
 - Protected user library page
-- Upload EPUB files through API routes
-- Parse and read EPUB content
+- Upload files through API routes
 - Persist books in Supabase-backed storage model
-- Save and restore reading progress
 
 ## Project Structure
 
 ```text
 app/
   api/books/...                # Server routes for books, upload, annotations, progress
-  library/                     # Library and reading pages
+  library/                     # Library pages
   sign-in/, sign-up/           # Clerk auth routes
 components/
-  library/                     # Reader + library UI components
+  library/                     # Library UI components
   layout/                      # Navbar and layout pieces
   ui/                          # Reusable UI primitives
 lib/
   auth/                        # Auth helpers
   books/                       # Book DTO + API utilities
-  epub/                        # EPUB parsing/building helpers
+  epub/                        # Upload parsing/building helpers
   supabase/                    # Supabase server/storage utilities
 store/                         # Client state stores
 supabase/                      # SQL/migration or infra-related files
@@ -126,7 +123,7 @@ This section is the long-term reference for planned work.
 - Improve upload reliability and partial-failure cleanup
 - Strengthen progress sync debounce and flush behavior
 - Expand API validation and error consistency
-- Add better loading/error UI states in reader flows
+- Add better loading/error UI states in upload flows
 
 ### Mid Term
 
@@ -137,7 +134,7 @@ This section is the long-term reference for planned work.
 
 ### Long Term
 
-- Multi-format support (beyond EPUB)
+- Multi-format support
 - Sharing/collaboration options
 - Reading analytics and insights
 - Background processing pipeline for heavy parsing tasks
@@ -147,9 +144,7 @@ This section is the long-term reference for planned work.
 - Auth-protected routes reject unauthenticated access
 - A user cannot access another user's books
 - Upload appears after refresh/re-login
-- Progress resumes from latest saved position
 - Delete removes both metadata and underlying file reference
-- Reader still loads when local cache is missing
 
 ## Important Contributor Note
 

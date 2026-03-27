@@ -1,6 +1,16 @@
+/**
+ * This route returns the authenticated user's full books collection from the
+ * database. It also emits lightweight debug log entries to help diagnose auth
+ * and query issues during development.
+ */
 import { NextResponse } from "next/server";
 import { appendFile } from "node:fs/promises";
 import { requireUserProfile } from "@/lib/auth/requireUserProfile";
+import {
+  handleCommonApiError,
+  profileResolutionFailedResponse,
+  unauthorizedResponse,
+} from "@/lib/api/books/errors";
 import { mapDbBookToBookDto } from "@/lib/books/dto";
 
 const DEBUG_LOG_PATH = "C:/Users/LENOVO/Documents/project/elib/debug-books.log";
@@ -42,18 +52,15 @@ export async function GET() {
 
     if (message === "UNAUTHORIZED") {
       await logDebug("GET /api/books unauthorized");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedResponse();
     }
 
     if (message === "PROFILE_RESOLUTION_FAILED") {
       await logDebug("GET /api/books profile_resolution_failed");
-      return NextResponse.json(
-        { error: "Failed to resolve user profile. Check Supabase table permissions." },
-        { status: 500 }
-      );
+      return profileResolutionFailedResponse();
     }
 
     await logDebug(`GET /api/books unexpected_error=${message}`);
-    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
+    return handleCommonApiError(error);
   }
 }

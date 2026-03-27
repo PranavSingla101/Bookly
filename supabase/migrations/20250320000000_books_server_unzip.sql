@@ -1,4 +1,6 @@
--- Server-side EPUB extraction: store unzipped tree in Storage and point epub.js at package.opf.
+-- This migration adds columns needed for server-side EPUB extraction metadata.
+-- It allows books to reference an extracted storage prefix and package.opf path
+-- so the web reader can stream unzipped assets directly from storage.
 alter table public.books
   add column if not exists extracted_storage_prefix text,
   add column if not exists package_opf_storage_path text;

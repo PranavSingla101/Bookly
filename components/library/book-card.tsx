@@ -1,3 +1,8 @@
+/**
+ * This component renders a single library book card with cover, title, and
+ * quick actions. It provides a Read shortcut to open the Foliate reader and a
+ * Remove action for deleting the book from the user's library.
+ */
 "use client";
 
 import Link from "next/link";
@@ -14,33 +19,7 @@ export function BookCard({ book, onDelete }: BookCardProps) {
     <div className="book-card">
       {/* Cover */}
       <div className="book-card-cover">
-        {book.readerUrl ? (
-          <Link href={`/library/${book.id}/read`} className="book-card-cover-link">
-            {book.coverData ? (
-              <img
-                src={book.coverData}
-                alt={book.title}
-                className="book-card-cover-img"
-              />
-            ) : (
-              <div className="book-card-cover-placeholder">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="book-card-cover-placeholder-icon"
-                >
-                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-                </svg>
-                <span className="book-card-cover-placeholder-title">{book.title}</span>
-              </div>
-            )}
-          </Link>
-        ) : book.coverData ? (
+        {book.coverData ? (
           <img
             src={book.coverData}
             alt={book.title}
@@ -65,11 +44,9 @@ export function BookCard({ book, onDelete }: BookCardProps) {
         )}
 
         <div className="book-card-overlay">
-          {book.readerUrl ? (
-            <Button type="button" variant="secondary" size="sm" className="book-card-read-btn" asChild>
-              <Link href={`/library/${book.id}/read`}>Read</Link>
-            </Button>
-          ) : null}
+          <Button asChild type="button" variant="secondary" size="sm" className="book-card-read-btn">
+            <Link href={`/library/${book.id}/read`}>Read</Link>
+          </Button>
           <Button
             type="button"
             variant="destructive"
@@ -91,9 +68,6 @@ export function BookCard({ book, onDelete }: BookCardProps) {
         <span className="book-card-title" title={book.title}>
           {book.title}
         </span>
-        {typeof book.readingProgress === "number" ? (
-          <span className="text-xs text-muted-foreground">{Math.round(book.readingProgress)}% read</span>
-        ) : null}
       </div>
     </div>
   );

@@ -1,10 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useThemeStore } from "@/store/useThemeStore";
 import { Search, Plus, LayoutGrid, MessageCircle, Menu, Sun, Moon, Settings } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 interface NavbarProps {
   onAddBook?: () => void;
@@ -18,21 +19,18 @@ export function Navbar({ onAddBook }: NavbarProps) {
   return (
     <nav className="navbar-container">
       <div className="navbar-inner">
-        {/* Logo */}
         <div className="navbar-section navbar-logo">
-          <Image
-            src="/notebook.svg"
-            alt="Library logo"
-            width={18}
-            height={18}
-            className="navbar-logo-img"
-            priority
-          />
+          <Link href="/library" aria-label="Bookly home">
+            <Image
+              src="/bookly logo no bg.png"
+              alt="Bookly logo"
+              width={26}
+              height={26}
+              className="navbar-logo-img"
+              priority
+            />
+          </Link>
         </div>
-
-        <span className="navbar-pipe" aria-hidden="true">
-          |
-        </span>
 
         {/* Search bar (center) */}
         <div className="navbar-section navbar-center">

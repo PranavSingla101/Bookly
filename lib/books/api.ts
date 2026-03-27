@@ -1,3 +1,8 @@
+/**
+ * This module provides client-side API helpers for the books domain, including
+ * library fetch/upload/delete, reading progress sync, annotation CRUD, and the
+ * reader-entry request used to launch Foliate for a specific book.
+ */
 import type { Book } from "@/store/useBookStore";
 
 interface BooksResponse {
@@ -35,6 +40,10 @@ interface AnnotationResponse {
   annotation: BookAnnotation;
 }
 
+interface ReaderEntryResponse {
+  url: string;
+}
+
 export class BooksApiError extends Error {
   status: number;
 
@@ -64,6 +73,17 @@ export async function fetchBook(bookId: string) {
     );
   }
   return (await response.json()) as SingleBookResponse;
+}
+
+export async function fetchBookReaderEntry(bookId: string) {
+  const response = await fetch(`/api/books/${bookId}/reader`, { cache: "no-store" });
+  if (!response.ok) {
+    throw new BooksApiError(
+      await parseErrorMessage(response, "Failed to load reader entry"),
+      response.status
+    );
+  }
+  return (await response.json()) as ReaderEntryResponse;
 }
 
 export async function fetchBooks() {
@@ -133,7 +153,7 @@ export async function updateBookProgress(input: {
 
   if (!response.ok) {
     throw new BooksApiError(
-      await parseErrorMessage(response, "Failed to sync reading progress"),
+      await parseErrorMessage(response, "Failed to sync book progress"),
       response.status
     );
   }

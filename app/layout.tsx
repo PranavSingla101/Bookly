@@ -1,3 +1,8 @@
+/**
+ * This root layout configures global app scaffolding: fonts, base metadata,
+ * theme provider, and Clerk provider wrapping all pages. It defines shared
+ * html/body classes used across the entire UI.
+ */
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Figtree } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -19,7 +24,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Elib",
-  description: "Upload and manage EPUBs in your library",
+  description: "Upload and manage books in your library",
+  icons: {
+    icon: "/bookly logo no bg.png",
+  },
 };
 
 export default function RootLayout({

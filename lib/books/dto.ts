@@ -1,5 +1,9 @@
+/**
+ * This DTO mapper translates database book rows into frontend-friendly book
+ * objects. It isolates null-to-undefined conversion and keeps response shaping
+ * consistent for all book API responses.
+ */
 import type { Book } from "@/store/useBookStore";
-import { publicBooksObjectUrl } from "@/lib/books/storagePublicUrl";
 
 /** Row shape from `books` (works with `select("*")` before/after optional columns are migrated). */
 export interface DbBookRow {
@@ -17,21 +21,6 @@ export interface DbBookRow {
 }
 
 export function mapDbBookToBookDto(row: DbBookRow): Book {
-  const opfPath =
-    row.package_opf_storage_path ??
-    (typeof row.storage_path === "string" && row.storage_path.toLowerCase().endsWith(".opf")
-      ? row.storage_path
-      : null);
-
-  let readerUrl: string | undefined;
-  if (opfPath) {
-    try {
-      readerUrl = publicBooksObjectUrl(opfPath);
-    } catch {
-      readerUrl = undefined;
-    }
-  }
-
   return {
     id: row.id,
     title: row.title,
@@ -39,10 +28,5 @@ export function mapDbBookToBookDto(row: DbBookRow): Book {
     coverData: row.cover_data ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    readerUrl,
-    readingCfi: row.reading_cfi ?? undefined,
-    readingProgress:
-      typeof row.reading_progress === "number" ? row.reading_progress : undefined,
-    readingUpdatedAt: row.reading_updated_at ?? undefined,
   };
 }

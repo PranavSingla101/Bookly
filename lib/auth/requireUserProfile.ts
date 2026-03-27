@@ -8,15 +8,32 @@ export async function requireUserProfile() {
   }
 
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
+  // Avoid relying on an upsert conflict target that may be missing in DB schema.
+  const { data: existingProfile, error: selectError } = await supabase
     .from("profiles")
-    .upsert({ clerk_user_id: userId }, { onConflict: "clerk_user_id" })
     .select("id")
-    .single();
+    .eq("clerk_user_id", userId)
+    .maybeSingle();
 
-  if (error || !data) {
+  if (selectError) {
+    console.error("[requireUserProfile] failed to query profiles", selectError);
     throw new Error("PROFILE_RESOLUTION_FAILED");
   }
 
-  return { supabase, clerkUserId: userId, profileId: data.id as string };
+  if (existingProfile?.id) {
+    return { supabase, clerkUserId: userId, profileId: existingProfile.id as string };
+  }
+
+  const { data: createdProfile, error: insertError } = await supabase
+    .from("profiles")
+    .insert({ clerk_user_id: userId })
+    .select("id")
+    .single();
+
+  if (insertError || !createdProfile?.id) {
+    console.error("[requireUserProfile] failed to create profile", insertError);
+    throw new Error("PROFILE_RESOLUTION_FAILED");
+  }
+
+  return { supabase, clerkUserId: userId, profileId: createdProfile.id as string };
 }

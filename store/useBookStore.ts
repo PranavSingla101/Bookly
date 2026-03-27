@@ -1,3 +1,8 @@
+/**
+ * This Zustand store manages client-side library state, including book list
+ * hydration and local CRUD helpers. Persistence keeps the latest library data
+ * available between sessions while cloud APIs remain source of truth.
+ */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -8,14 +13,6 @@ export interface Book {
   coverData?: string;
   createdAt?: string;
   updatedAt?: string;
-  /** Public URL to package.opf for epub.js (server-unzipped books). */
-  readerUrl?: string;
-  /** Canonical server-synced EPUB CFI location for resume. */
-  readingCfi?: string;
-  /** Optional cached progress percentage [0..100]. */
-  readingProgress?: number;
-  /** ISO timestamp used by last-write-wins sync updates. */
-  readingUpdatedAt?: string;
 }
 
 interface BookState {
