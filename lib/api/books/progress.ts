@@ -27,14 +27,7 @@ interface ParseProgressInputFailure {
 
 export type ParseProgressInputResult = ParseProgressInputSuccess | ParseProgressInputFailure;
 
-export async function parseProgressInput(request: Request): Promise<ParseProgressInputResult> {
-  let body: ProgressPatchBody;
-  try {
-    body = (await request.json()) as ProgressPatchBody;
-  } catch {
-    return { ok: false, error: "Invalid JSON body" };
-  }
-
+function parseProgressBody(body: ProgressPatchBody): ParseProgressInputResult {
   const cfi = typeof body.cfi === "string" ? body.cfi.trim() : "";
   if (!cfi) {
     return { ok: false, error: "Missing cfi" };
@@ -59,4 +52,22 @@ export async function parseProgressInput(request: Request): Promise<ParseProgres
       clientUpdatedAt,
     },
   };
+}
+
+/** Parses a progress PATCH body without reading `Request` (use when the body was already consumed). */
+export function parseProgressJsonBody(body: unknown): ParseProgressInputResult {
+  if (!body || typeof body !== "object") {
+    return { ok: false, error: "Invalid JSON body" };
+  }
+  return parseProgressBody(body as ProgressPatchBody);
+}
+
+export async function parseProgressInput(request: Request): Promise<ParseProgressInputResult> {
+  let body: ProgressPatchBody;
+  try {
+    body = (await request.json()) as ProgressPatchBody;
+  } catch {
+    return { ok: false, error: "Invalid JSON body" };
+  }
+  return parseProgressBody(body);
 }

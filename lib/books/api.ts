@@ -54,6 +54,13 @@ export class BooksApiError extends Error {
   }
 }
 
+/** True when `fetch` was aborted via `AbortController` (user cancel or navigation). */
+export function isAbortError(error: unknown): boolean {
+  if (error instanceof DOMException && error.name === "AbortError") return true;
+  if (error instanceof Error && error.name === "AbortError") return true;
+  return false;
+}
+
 async function parseErrorMessage(response: Response, fallback: string) {
   try {
     const json = (await response.json()) as { error?: string; detail?: string };
@@ -101,17 +108,25 @@ export async function uploadBook(input: {
   file: File;
   title: string;
   author?: string;
-  coverData?: string;
+  /** Compressed cover image (e.g. WebP); omit when the EPUB has no cover. */
+  coverBlob?: Blob | null;
+  /** Filename for the cover part (e.g. cover.webp). */
+  coverFilename?: string;
+  /** Pass to cancel the upload (e.g. user leaves the page or clicks Cancel). */
+  signal?: AbortSignal;
 }) {
   const formData = new FormData();
   formData.append("file", input.file);
   formData.append("title", input.title);
   if (input.author) formData.append("author", input.author);
-  if (input.coverData) formData.append("coverData", input.coverData);
+  if (input.coverBlob && input.coverBlob.size > 0) {
+    formData.append("cover", input.coverBlob, input.coverFilename ?? "cover.webp");
+  }
 
   const response = await fetch("/api/books/upload", {
     method: "POST",
     body: formData,
+    signal: input.signal,
   });
 
   if (!response.ok) {
@@ -131,6 +146,30 @@ export async function deleteBook(bookId: string) {
       response.status
     );
   }
+}
+
+export async function updateBookMetadata(input: {
+  bookId: string;
+  title?: string;
+  author?: string | null;
+}) {
+  const body: { title?: string; author?: string | null } = {};
+  if (input.title !== undefined) body.title = input.title;
+  if (input.author !== undefined) body.author = input.author;
+
+  const response = await fetch(`/api/books/${input.bookId}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new BooksApiError(
+      await parseErrorMessage(response, "Failed to update book"),
+      response.status
+    );
+  }
+  return (await response.json()) as SingleBookResponse;
 }
 
 export async function updateBookProgress(input: {

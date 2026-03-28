@@ -1,7 +1,6 @@
 /**
- * This route returns the entry URL that Foliate.js should open for a specific
- * book in the signed-in user's library. It verifies ownership, derives the
- * OPF-relative path, and maps it to the protected content proxy endpoint.
+ * Returns the URL Foliate should load: raw EPUB (`/api/books/:id/epub`) when
+ * `epub_storage_path` is set, otherwise legacy extracted OPF assets under `/content/...`.
  */
 import { NextResponse } from "next/server";
 import { requireUserProfile } from "@/lib/auth/requireUserProfile";
@@ -46,14 +45,21 @@ export async function GET(_request: Request, props: RouteContext<"/api/books/[id
       supabase,
       id,
       profileId,
-      "id, storage_path, package_opf_storage_path, extracted_storage_prefix"
+      "id, storage_path, package_opf_storage_path, extracted_storage_prefix, epub_storage_path"
     );
 
     if (error || !row) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
     }
 
-    const url = buildBookOpfAssetUrl(id, row as Record<string, unknown>);
+    const r = row as Record<string, unknown>;
+    const epubPath =
+      typeof r.epub_storage_path === "string" ? r.epub_storage_path.trim() : "";
+    if (epubPath) {
+      return NextResponse.json({ url: `/api/books/${id}/epub` });
+    }
+
+    const url = buildBookOpfAssetUrl(id, r);
     if (!url) {
       return NextResponse.json({ error: "Book reader entry is unavailable" }, { status: 400 });
     }

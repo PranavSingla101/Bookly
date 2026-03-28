@@ -5,10 +5,10 @@
  */
 import { NextResponse } from "next/server";
 import { requireUserProfile } from "@/lib/auth/requireUserProfile";
-import { BOOKS_BUCKET } from "@/lib/api/books/constants";
+import { BOOKS_BUCKET, COVERS_BUCKET, EPUBS_BUCKET } from "@/lib/api/books/constants";
 import { handleCommonApiError } from "@/lib/api/books/errors";
 import { fetchOwnedBook } from "@/lib/api/books/books";
-import { parseProgressInput } from "@/lib/api/books/progress";
+import { parseProgressJsonBody } from "@/lib/api/books/progress";
 import { mapDbBookToBookDto } from "@/lib/books/dto";
 import { removeStorageFolderPrefix } from "@/lib/supabase/storageTree";
 
@@ -50,6 +50,22 @@ export async function DELETE(_request: Request, props: RouteContext<"/api/books/
       return NextResponse.json({ error: "Failed to delete book" }, { status: 500 });
     }
 
+    const epubPath =
+      typeof existing.epub_storage_path === "string"
+        ? existing.epub_storage_path.trim()
+        : "";
+    if (epubPath) {
+      await supabase.storage.from(EPUBS_BUCKET).remove([epubPath]);
+    }
+
+    const coverPath =
+      typeof existing.cover_storage_path === "string"
+        ? existing.cover_storage_path.trim()
+        : "";
+    if (coverPath) {
+      await supabase.storage.from(COVERS_BUCKET).remove([coverPath]);
+    }
+
     const prefix =
       typeof existing.extracted_storage_prefix === "string"
         ? existing.extracted_storage_prefix.trim()
@@ -80,7 +96,56 @@ export async function PATCH(request: Request, props: RouteContext<"/api/books/[i
     const { supabase, profileId } = await requireUserProfile();
     const { id } = await props.params;
 
-    const parsed = await parseProgressInput(request);
+    let jsonBody: unknown;
+    try {
+      jsonBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const isProgressPatch =
+      jsonBody !== null &&
+      typeof jsonBody === "object" &&
+      typeof (jsonBody as { cfi?: unknown }).cfi === "string";
+
+    if (!isProgressPatch) {
+      const o = jsonBody as Record<string, unknown>;
+      const updates: { title?: string; author?: string | null } = {};
+      if (typeof o.title === "string") {
+        updates.title = o.title.trim() || "Untitled";
+      }
+      if (Object.prototype.hasOwnProperty.call(o, "author")) {
+        if (o.author === null) {
+          updates.author = null;
+        } else if (typeof o.author === "string") {
+          updates.author = o.author.trim() || null;
+        } else {
+          return NextResponse.json({ error: "Invalid author field" }, { status: 400 });
+        }
+      }
+      if (Object.keys(updates).length === 0) {
+        return NextResponse.json(
+          { error: "Expected reading progress (cfi) or metadata (title, author)" },
+          { status: 400 }
+        );
+      }
+
+      const { data: updatedRow, error: metaError } = await supabase
+        .from("books")
+        .update(updates)
+        .eq("id", id)
+        .eq("profile_id", profileId)
+        .select("*")
+        .single();
+
+      if (metaError || !updatedRow) {
+        return NextResponse.json({ error: "Failed to update book" }, { status: 500 });
+      }
+
+      return NextResponse.json({ book: mapDbBookToBookDto(updatedRow) });
+    }
+
+    const parsed = parseProgressJsonBody(jsonBody);
     if (!parsed.ok) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }

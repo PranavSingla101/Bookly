@@ -55,7 +55,7 @@ export async function GET(
     return new NextResponse(content, {
       headers: {
         "content-type": getContentType(relativePath),
-        "cache-control": "public, max-age=3600",
+        "cache-control": "no-store, max-age=0",
       },
     });
   } catch {

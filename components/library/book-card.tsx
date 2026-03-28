@@ -1,32 +1,43 @@
 /**
- * This component renders a single library book card with cover, title, and
- * quick actions. It provides a Read shortcut to open the Foliate reader and a
- * Remove action for deleting the book from the user's library.
+ * Library book card: framed cover on top; title, progress, and settings sit below with
+ * no panel (transparent, inherits page background). Cover links to Foliate; gear opens details.
  */
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { Settings } from "lucide-react";
 import { Book as BookStore } from "@/store/useBookStore";
-import { Button } from "@/components/ui/button";
+import { BookDetailsModal } from "@/components/library/book-details-modal";
+import { formatReadingPercent } from "@/lib/format/bookUi";
 
 interface BookCardProps {
   book: BookStore;
   onDelete: (id: string) => void;
+  onBookUpdated: (book: BookStore) => void;
 }
 
-export function BookCard({ book, onDelete }: BookCardProps) {
+export function BookCard({ book, onDelete, onBookUpdated }: BookCardProps) {
+  const [coverFailed, setCoverFailed] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
   return (
-    <div className="book-card">
-      {/* Cover */}
-      <div className="book-card-cover">
-        {book.coverData ? (
+    <div className="group flex w-full flex-col transition-transform duration-200 group-hover:-translate-y-0.5">
+      <Link
+        href={`/library/${book.id}/read`}
+        className="relative block aspect-[2/3] w-full shrink-0 overflow-hidden rounded-xl bg-zinc-800/80 shadow-md ring-1 ring-white/5 outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+        aria-label={`Open ${book.title} in reader`}
+      >
+        {book.coverData && !coverFailed ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={book.coverData}
-            alt={book.title}
-            className="book-card-cover-img"
+            alt=""
+            className="h-full w-full object-cover"
+            onError={() => setCoverFailed(true)}
           />
         ) : (
-          <div className="book-card-cover-placeholder">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-3 text-center text-zinc-500">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -35,40 +46,50 @@ export function BookCard({ book, onDelete }: BookCardProps) {
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="book-card-cover-placeholder-icon"
+              className="h-7 w-7 opacity-40"
             >
               <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
             </svg>
-            <span className="book-card-cover-placeholder-title">{book.title}</span>
+            <span className="line-clamp-3 text-[10px] font-medium leading-snug text-zinc-400">
+              {book.title}
+            </span>
           </div>
         )}
+      </Link>
 
-        <div className="book-card-overlay">
-          <Button asChild type="button" variant="secondary" size="sm" className="book-card-read-btn">
-            <Link href={`/library/${book.id}/read`}>Read</Link>
-          </Button>
-          <Button
+      <div className="flex min-h-0 flex-col gap-2 bg-transparent px-0 pt-3">
+        <p
+          className="min-w-0 truncate text-sm font-semibold leading-snug text-zinc-100"
+          title={book.title}
+        >
+          {book.title}
+        </p>
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <span className="shrink-0 text-xs tabular-nums text-zinc-400">
+            {formatReadingPercent(book.readingProgress)}
+          </span>
+          <button
             type="button"
-            variant="destructive"
-            size="sm"
+            className="flex size-8 shrink-0 items-center justify-center rounded-md text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-100"
+            aria-label="Book details"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              onDelete(book.id);
+              setDetailsOpen(true);
             }}
-            className="book-card-delete-btn"
           >
-            Remove
-          </Button>
+            <Settings className="size-4" strokeWidth={1.75} />
+          </button>
         </div>
       </div>
 
-      {/* Title & meta */}
-      <div className="book-card-info">
-        <span className="book-card-title" title={book.title}>
-          {book.title}
-        </span>
-      </div>
+      <BookDetailsModal
+        book={book}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        onBookUpdated={onBookUpdated}
+        onDelete={onDelete}
+      />
     </div>
   );
 }
