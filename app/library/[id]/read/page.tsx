@@ -49,9 +49,27 @@ export default function BookReaderPage() {
         : readerAssetUrl;
     q.set("url", epubUrl);
     q.set("return", returnTo);
+    const readerMode = searchParams.get("mode");
+    if (readerMode === "paginated" || readerMode === "scrolled" || readerMode === "continuous") {
+      q.set("mode", readerMode);
+    }
     const flow = searchParams.get("flow");
     if (flow === "paginated" || flow === "pages" || flow === "scroll" || flow === "scrolled") {
       q.set("flow", flow);
+    }
+    const continuousScroll = searchParams.get("continuousScroll");
+    if (
+      continuousScroll === "0" ||
+      continuousScroll === "false" ||
+      continuousScroll === "off"
+    ) {
+      q.set("continuousScroll", "0");
+    } else if (
+      continuousScroll === "1" ||
+      continuousScroll === "true" ||
+      continuousScroll === "on"
+    ) {
+      q.set("continuousScroll", "1");
     }
     return `/foliate-js/reader.html?${q.toString()}`;
   }, [readerAssetUrl, searchParams]);
