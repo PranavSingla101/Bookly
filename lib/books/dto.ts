@@ -39,6 +39,10 @@ export function mapDbBookToBookDto(row: DbBookRow): Book {
     coverData: coverFromStorage ?? row.cover_data ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    readingCfi:
+      typeof row.reading_cfi === "string" && row.reading_cfi.trim()
+        ? row.reading_cfi
+        : null,
     readingProgress:
       typeof row.reading_progress === "number" && Number.isFinite(row.reading_progress)
         ? row.reading_progress

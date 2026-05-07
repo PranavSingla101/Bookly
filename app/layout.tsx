@@ -9,6 +9,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { PwaRegister } from "@/components/providers/pwa-register";
 
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -23,10 +24,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Elib",
-  description: "Upload and manage books in your library",
+  title: "Bookly",
+  description: "Upload, manage, and read your EPUB library from any device.",
   icons: {
     icon: "/bookly logo no bg.png",
+    apple: "/bookly logo no bg.png",
+  },
+  manifest: "/manifest.json",
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "apple-mobile-web-app-title": "Bookly",
+    "theme-color": "#09090b",
   },
 };
 
@@ -51,6 +61,7 @@ export default function RootLayout({
       <body className="min-h-full bg-background text-foreground">
         <ClerkProvider>
           <ThemeProvider>{children}</ThemeProvider>
+          <PwaRegister />
         </ClerkProvider>
       </body>
     </html>

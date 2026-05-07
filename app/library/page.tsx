@@ -50,7 +50,13 @@ export default function LibraryPage() {
     void fetchBooks()
       .then(({ books: cloudBooks }) => {
         if (cancelled) return;
-        setBooks(cloudBooks);
+        // Sort by most recently read/updated — books touched by progress sync float to top
+        const sorted = [...cloudBooks].sort((a, b) => {
+          const ta = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+          const tb = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+          return tb - ta;
+        });
+        setBooks(sorted);
       })
       .catch((error) => {
         if (error instanceof BooksApiError && error.status === 401) {
@@ -104,9 +110,21 @@ export default function LibraryPage() {
     uploadAbortRef.current?.abort();
   }, []);
 
+  const MAX_UPLOAD_BYTES = 4 * 1024 * 1024; // 4 MB — Vercel free-tier body limit
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      const sizeMb = (file.size / 1024 / 1024).toFixed(1);
+      setUploadError(
+        `File too large (${sizeMb} MB). Maximum upload size is 4 MB. ` +
+        `Try compressing the EPUB or upgrading the hosting plan.`
+      );
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
 
     uploadSessionIdRef.current += 1;
     const sessionId = uploadSessionIdRef.current;
@@ -191,7 +209,7 @@ export default function LibraryPage() {
           : null;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen transition-colors" style={{ background: 'var(--lib-bg)', color: 'var(--lib-text-primary)' }}>
       <input
         type="file"
         accept=".epub,application/epub+zip"
@@ -213,12 +231,13 @@ export default function LibraryPage() {
           </div>
         ) : null}
         {uploadPhase !== "idle" ? (
-          <div className="mb-6 flex flex-wrap items-center gap-4 text-sm text-zinc-400" aria-live="polite">
+          <div className="mb-6 flex flex-wrap items-center gap-4 text-sm" style={{ color: 'var(--lib-text-secondary)' }} aria-live="polite">
             {coverPreviewUrl ? (
               <img
                 src={coverPreviewUrl}
                 alt=""
-                className="h-14 w-10 shrink-0 rounded object-cover ring-1 ring-white/10"
+                className="h-14 w-10 shrink-0 rounded border object-cover"
+                style={{ borderColor: 'var(--lib-border)' }}
               />
             ) : null}
             <span className="min-w-0 flex-1">{uploadStatusLabel}</span>
@@ -226,7 +245,8 @@ export default function LibraryPage() {
               <button
                 type="button"
                 onClick={handleCancelUpload}
-                className="shrink-0 rounded-md border border-zinc-600 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-200 hover:bg-zinc-800"
+                className="shrink-0 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors"
+                style={{ borderColor: 'var(--lib-border)', background: 'var(--lib-card-bg)', color: 'var(--lib-text-primary)' }}
               >
                 Cancel upload
               </button>
@@ -235,7 +255,7 @@ export default function LibraryPage() {
         ) : null}
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {isLoading && books.length === 0 ? (
-            <div className="col-span-full text-sm text-zinc-500">Loading your library…</div>
+            <div className="col-span-full text-sm" style={{ color: 'var(--lib-text-muted)' }}>Loading your library…</div>
           ) : null}
           {books.map((book) => (
             <BookCard

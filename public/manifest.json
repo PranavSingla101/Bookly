@@ -1,0 +1,17 @@
+{
+  "name": "Bookly",
+  "short_name": "Bookly",
+  "description": "Your cloud e-library. Upload, manage, and read EPUB books anywhere.",
+  "start_url": "/library",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/bookly logo no bg.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}

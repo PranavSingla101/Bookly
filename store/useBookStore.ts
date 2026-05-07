@@ -15,6 +15,8 @@ export interface Book {
   updatedAt?: string;
   /** Reading progress percentage [0, 100] from the server; omit when unknown. */
   readingProgress?: number | null;
+  /** Latest EPUB CFI position for cross-device resume. */
+  readingCfi?: string | null;
   /** Original upload size in bytes when stored. */
   fileSize?: number | null;
   fileName?: string | null;

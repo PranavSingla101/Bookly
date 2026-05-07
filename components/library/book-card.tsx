@@ -25,7 +25,8 @@ export function BookCard({ book, onDelete, onBookUpdated }: BookCardProps) {
     <div className="group flex w-full flex-col transition-transform duration-200 group-hover:-translate-y-0.5">
       <Link
         href={`/library/${book.id}/read`}
-        className="relative block aspect-[2/3] w-full shrink-0 overflow-hidden rounded-xl bg-zinc-800/80 shadow-md ring-1 ring-white/5 outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+        className="relative block aspect-[2/3] w-full shrink-0 overflow-hidden rounded-xl border shadow-md outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+        style={{ background: 'var(--lib-card-bg)', borderColor: 'var(--lib-border)' }}
         aria-label={`Open ${book.title} in reader`}
       >
         {book.coverData && !coverFailed ? (
@@ -37,7 +38,7 @@ export function BookCard({ book, onDelete, onBookUpdated }: BookCardProps) {
             onError={() => setCoverFailed(true)}
           />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-3 text-center text-zinc-500">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-3 text-center" style={{ color: 'var(--lib-text-muted)' }}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -50,7 +51,7 @@ export function BookCard({ book, onDelete, onBookUpdated }: BookCardProps) {
             >
               <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
             </svg>
-            <span className="line-clamp-3 text-[10px] font-medium leading-snug text-zinc-400">
+            <span className="line-clamp-3 text-[10px] font-medium leading-snug" style={{ color: 'var(--lib-text-secondary)' }}>
               {book.title}
             </span>
           </div>
@@ -59,18 +60,20 @@ export function BookCard({ book, onDelete, onBookUpdated }: BookCardProps) {
 
       <div className="flex min-h-0 flex-col gap-2 bg-transparent px-0 pt-3">
         <p
-          className="min-w-0 truncate text-sm font-semibold leading-snug text-zinc-100"
+          className="min-w-0 truncate text-sm font-semibold leading-snug"
+          style={{ color: 'var(--lib-text-primary)' }}
           title={book.title}
         >
           {book.title}
         </p>
         <div className="flex min-w-0 items-center justify-between gap-3">
-          <span className="shrink-0 text-xs tabular-nums text-zinc-400">
+          <span className="shrink-0 text-xs tabular-nums" style={{ color: 'var(--lib-text-secondary)' }}>
             {formatReadingPercent(book.readingProgress)}
           </span>
           <button
             type="button"
-            className="flex size-8 shrink-0 items-center justify-center rounded-md text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-100"
+            className="flex size-8 shrink-0 items-center justify-center rounded-md transition-colors"
+            style={{ color: 'var(--lib-text-secondary)' }}
             aria-label="Book details"
             onClick={(e) => {
               e.preventDefault();
