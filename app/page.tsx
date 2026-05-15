@@ -1,19 +1,30 @@
-/**
- * The public landing page introduces Bookly and routes users to sign-in or
- * directly to their library based on the active Clerk session.
- */
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { Cormorant_Garamond, Nunito } from "next/font/google";
+import {
+  BookOpen,
+  RefreshCw,
+  PenLine,
+  BarChart3,
+  Library,
+  ArrowRight,
+  BookMarked,
+  Smartphone,
+  Monitor,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ScrollReveal } from "@/components/landing/ScrollReveal";
+import { FaqAccordion } from "@/components/landing/FaqAccordion";
+import { PricingSection } from "@/components/landing/PricingSection";
 
 const landingDisplay = Cormorant_Garamond({
   subsets: ["latin"],
   variable: "--font-landing-display",
-  weight: ["600", "700"],
+  weight: ["400", "600", "700"],
+  style: ["normal", "italic"],
 });
 
 const landingSans = Nunito({
@@ -22,50 +33,248 @@ const landingSans = Nunito({
   weight: ["500", "600", "700", "800"],
 });
 
-const experienceFeatures = [
+/* ─── Data ─────────────────────────────────────────────────────────────── */
+
+const howItWorksSteps = [
   {
-    imageSrc: "/file.svg",
-    imageAlt: "Open book file icon suggesting a saved place in your reading",
-    imageClass: "object-contain p-[14%] opacity-[0.88]",
-    panelClass:
-      "bg-[#f0d4d8]/90 ring-1 ring-[#c9a8a8]/25",
-    title: "Smart Progress",
-    body:
-      "Resume from your exact page on any device, without hunting for where you stopped.",
+    Icon: BookOpen,
+    step: "01",
+    title: "Add your books",
+    body: "Import from your library, paste a URL, or browse Bookly's catalogue.",
+    cardBg: "#fdeee3",
+    iconBg: "#9B4A2B",
   },
   {
-    imageSrc:
-      "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80",
-    imageAlt: "Editorial notebook and pen on a warm desk surface",
-    imageClass: "object-cover opacity-[0.8] scale-[1.03]",
-    panelClass:
-      "bg-[#f5ecc8]/95 ring-1 ring-[#d4c9a0]/35",
-    title: "Inline Notes",
-    body:
-      "Highlight and annotate in context so ideas stay tied to the passage that inspired them.",
+    Icon: PenLine,
+    step: "02",
+    title: "Read & highlight",
+    body: "Distraction-free reader with inline note-taking and highlight colours.",
+    cardBg: "#f5e6d4",
+    iconBg: "#7a4428",
   },
   {
-    imageSrc: "/window.svg",
-    imageAlt: "Minimal window frame suggesting a calm, focused reading interface",
-    imageClass: "object-contain p-[14%] opacity-[0.88]",
-    panelClass:
-      "bg-[#d9e5d6]/95 ring-1 ring-[#a8b8a5]/35",
-    title: "Quiet Interface",
-    body:
-      "Minimal controls and calm typography so the page—not the chrome—stays in focus.",
+    Icon: RefreshCw,
+    step: "03",
+    title: "Pick up anywhere",
+    body: "Progress syncs across all your devices automatically.",
+    cardBg: "#ecddd0",
+    iconBg: "#5c3320",
   },
-] as const;
+];
+
+const features = [
+  {
+    label: "Deep Focus",
+    title: "Distraction-free reading mode",
+    body: "Full-screen reading with customisable fonts and backgrounds. Nothing competes with the words on the page.",
+    Illustration: ReaderMockIllustration,
+  },
+  {
+    label: "Annotations",
+    title: "Smart highlights & notes",
+    body: "Capture thoughts in context with colour-coded highlights. Export your annotations anytime you need them.",
+    Illustration: HighlightsMockIllustration,
+  },
+  {
+    label: "Sync",
+    title: "Progress sync across sessions",
+    body: "Your reading position is saved automatically. Pick up exactly where you left off on any signed-in device.",
+    Illustration: SyncMockIllustration,
+  },
+  {
+    label: "Habits",
+    title: "Reading streaks & stats",
+    body: "Gentle progress tracking to keep the momentum going. Accountability without gamification pressure.",
+    Illustration: StatsMockIllustration,
+  },
+  {
+    label: "Library",
+    title: "Universal library support",
+    body: "Import EPUBs, PDFs, and web articles into one organised shelf. Your entire reading life in one place.",
+    Illustration: LibraryMockIllustration,
+  },
+];
+
+const testimonials = [
+  {
+    quote:
+      "Bookly is the first reading app that actually feels like reading — not using software.",
+    name: "Meera S.",
+    role: "Avid reader",
+    initials: "MS",
+  },
+  {
+    quote: "I finally finish books now. The sync just works.",
+    name: "Tom R.",
+    role: "Casual reader",
+    initials: "TR",
+  },
+  {
+    quote: "My highlights are actually useful now. Game changer for research.",
+    name: "Anjali K.",
+    role: "Student",
+    initials: "AK",
+  },
+];
+
+/* ─── Illustration components ───────────────────────────────────────────── */
+
+function ReaderMockIllustration() {
+  return (
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#1e120a]">
+      <div className="absolute inset-0 flex flex-col">
+        <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+          <span className="h-2 w-2 rounded-full bg-white/20" />
+          <span className="h-2 w-2 rounded-full bg-white/20" />
+          <span className="h-2 w-2 rounded-full bg-white/20" />
+          <BookOpen className="ml-auto h-3.5 w-3.5 text-white/25" aria-hidden="true" />
+        </div>
+        <div className="flex flex-1 flex-col items-center justify-center gap-2.5 px-10 py-6">
+          <div className="h-2.5 w-3/5 rounded-full bg-white/20" />
+          <div className="h-1.5 w-full rounded-full bg-white/10" />
+          <div className="h-1.5 w-11/12 rounded-full bg-white/10" />
+          <div className="h-1.5 w-full rounded-full bg-white/10" />
+          <div className="h-1.5 w-4/5 rounded-full bg-white/10" />
+          <div className="mt-2 h-1.5 w-full rounded-full bg-white/10" />
+          <div className="h-1.5 w-11/12 rounded-full bg-white/10" />
+          <div className="h-1.5 w-full rounded-full bg-white/10" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HighlightsMockIllustration() {
+  return (
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[rgba(155,74,43,0.1)] bg-[#fdf8f0]">
+      <div className="absolute inset-0 flex flex-col justify-center gap-2.5 px-8 py-6">
+        <div className="h-2 w-full rounded-full bg-[rgba(155,74,43,0.08)]" />
+        <div className="h-2 w-11/12 rounded-full bg-[rgba(196,118,58,0.28)]" />
+        <div className="h-2 w-full rounded-full bg-[rgba(155,74,43,0.08)]" />
+        <div className="h-2 w-4/5 rounded-full bg-[rgba(155,74,43,0.08)]" />
+        <div className="h-2 w-full rounded-full bg-[rgba(155,74,43,0.08)]" />
+        <div className="h-2 w-11/12 rounded-full bg-[rgba(155,74,43,0.2)]" />
+        <div className="h-2 w-full rounded-full bg-[rgba(155,74,43,0.08)]" />
+        <div className="mt-1 flex items-center gap-2">
+          <div className="h-6 w-6 rounded bg-[rgba(196,118,58,0.15)] p-1">
+            <PenLine className="h-full w-full text-[#9B4A2B]" aria-hidden="true" />
+          </div>
+          <div className="h-1.5 w-24 rounded-full bg-[rgba(155,74,43,0.15)]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SyncMockIllustration() {
+  return (
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[rgba(155,74,43,0.1)] bg-[#fdf8f0]">
+      <div className="absolute inset-0 flex items-center justify-center gap-6 px-8">
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex h-16 w-11 items-center justify-center rounded-xl border-2 border-[rgba(155,74,43,0.25)] bg-white/70">
+            <Smartphone className="h-6 w-6 text-[#9B4A2B]/50" aria-hidden="true" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="h-1 w-10 rounded-full bg-[#9B4A2B]/20" />
+            <div className="h-1 w-7 rounded-full bg-[#9B4A2B]/15" />
+          </div>
+        </div>
+        <RefreshCw className="h-7 w-7 text-[#9B4A2B]/35" aria-hidden="true" />
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex h-16 w-20 items-center justify-center rounded-xl border-2 border-[rgba(155,74,43,0.25)] bg-white/70">
+            <Monitor className="h-7 w-7 text-[#9B4A2B]/50" aria-hidden="true" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="h-1 w-14 rounded-full bg-[#9B4A2B]/20" />
+            <div className="h-1 w-10 rounded-full bg-[#9B4A2B]/15" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatsMockIllustration() {
+  const bars = [40, 65, 50, 80, 70, 90, 75];
+  const days = ["M", "T", "W", "T", "F", "S", "S"];
+  return (
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[rgba(155,74,43,0.1)] bg-[#fdf8f0] px-8 py-8">
+      <div className="flex items-end gap-2" style={{ height: "6rem" }}>
+        {bars.map((h, i) => (
+          <div
+            key={i}
+            className="flex-1 rounded-t transition-none"
+            style={{
+              height: `${h}%`,
+              background: i === 5 ? "#9B4A2B" : "rgba(155,74,43,0.2)",
+            }}
+          />
+        ))}
+      </div>
+      <div className="mt-1.5 flex justify-between">
+        {days.map((d, i) => (
+          <span
+            key={i}
+            className="flex-1 text-center font-[family-name:var(--font-landing-sans)] text-[10px] text-[#8B6B57]/70"
+          >
+            {d}
+          </span>
+        ))}
+      </div>
+      <div className="mt-4 flex items-center gap-2">
+        <BarChart3 className="h-4 w-4 text-[#9B4A2B]" aria-hidden="true" />
+        <span className="font-[family-name:var(--font-landing-sans)] text-xs font-semibold text-[#5C3D2A]">
+          7-day reading streak
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function LibraryMockIllustration() {
+  const formats = [
+    { label: "EPUB", Icon: BookOpen, color: "#9B4A2B" },
+    { label: "PDF", Icon: BookMarked, color: "#C4763A" },
+    { label: "Article", Icon: Library, color: "#6a7a8B" },
+  ];
+  return (
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[rgba(155,74,43,0.1)] bg-[#fdf8f0]">
+      <div className="absolute inset-0 flex items-center justify-center p-8">
+        <div className="grid w-full grid-cols-3 gap-3">
+          {formats.map(({ label, Icon, color }) => (
+            <div
+              key={label}
+              className="flex flex-col items-center gap-2.5 rounded-xl border border-[rgba(155,74,43,0.12)] bg-white/70 p-4"
+            >
+              <Icon className="h-8 w-8" style={{ color }} aria-hidden="true" />
+              <span
+                className="font-[family-name:var(--font-landing-sans)] text-xs font-semibold"
+                style={{ color }}
+              >
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Page ──────────────────────────────────────────────────────────────── */
 
 export default async function LandingPage() {
   const { userId } = await auth();
-  if (userId) {
-    redirect("/library");
-  }
+  if (userId) redirect("/library");
 
   const currentYear = new Date().getFullYear();
 
   return (
     <main className={`landing-shell ${landingDisplay.variable} ${landingSans.variable}`}>
+
+      {/* ================================================================
+          SECTION 1 — HERO
+          ================================================================ */}
       <section className="landing-heroStage">
         <Image
           src="/landing_page_bg.png"
@@ -84,27 +293,33 @@ export default async function LandingPage() {
               <Image
                 src="/bookly logo no bg.png"
                 alt="Bookly logo"
-                width={34}
-                height={34}
+                width={32}
+                height={32}
                 className="landing-brandMark"
                 priority
               />
               <span className="landing-brandWord">Bookly</span>
             </Link>
 
-            <nav className="landing-actions" aria-label="Primary">
+            <nav className="landing-actions" aria-label="Primary navigation">
+              <a href="#features" className="landing-navLink hidden sm:block">Features</a>
+              <a href="#pricing" className="landing-navLink hidden sm:block">Pricing</a>
+              <a href="#faq" className="landing-navLink hidden sm:block">FAQ</a>
+              <div className="landing-navDivider hidden sm:block" aria-hidden="true" />
               <Button asChild className="landing-navButtonPrimary">
                 <Link href="/sign-in">Sign in</Link>
               </Button>
             </nav>
           </header>
 
-          <section className="landing-hero">
+          <section className="landing-hero" aria-labelledby="hero-heading">
             <div className="landing-panel">
-              <p className="landing-kicker">A quiet home for your books</p>
-              <h1 className="landing-title">Read in a calmer flow, every day.</h1>
+              <p className="landing-kicker-serif">A quiet home for your books</p>
+              <h1 id="hero-heading" className="landing-title">
+                Read in a calmer flow, every day.
+              </h1>
               <p className="landing-summary">
-                Keep your shelf organized, continue from your last page, and save highlights
+                Keep your shelf organised, continue from your last page, and save highlights
                 without losing focus. Bookly stays warm, simple, and intentionally minimal.
               </p>
 
@@ -112,237 +327,233 @@ export default async function LandingPage() {
                 <Button asChild size="lg" className="landing-ctaPrimary">
                   <Link href="/sign-in">Start Reading</Link>
                 </Button>
-                <Button asChild size="lg" variant="secondary" className="landing-ctaSecondary">
+                <Button asChild size="lg" className="landing-ctaSecondary">
                   <Link href="/library">Open Library</Link>
                 </Button>
               </div>
 
-              <ul className="landing-points" aria-label="Key features">
-                <li className="landing-point">Progress sync across sessions</li>
-                <li className="landing-point">Highlights and notes in context</li>
-                <li className="landing-point">Simple, distraction-free reading</li>
-              </ul>
             </div>
           </section>
         </div>
-        <div className="landing-heroFade" aria-hidden="true" />
       </section>
 
-      {/* Editorial sections below hero — warm cream + earthy brown palette */}
+      {/* Editorial sections — warm cream background */}
       <div className="w-full">
-        {/* Section 1: The Experience */}
-        <section
-          className="mx-auto w-full max-w-6xl px-6 py-32 md:px-8"
-          aria-labelledby="experience-heading"
-        >
-          <p className="font-[family-name:var(--font-landing-sans)] text-xs font-semibold uppercase tracking-widest text-[#6f5036]/85">
-            The experience
-          </p>
-          <h2
-            id="experience-heading"
-            className="mt-3 max-w-3xl text-left font-[family-name:var(--font-landing-display),Georgia,serif] text-4xl font-semibold leading-[1.1] tracking-tight text-[#3b2616] md:text-5xl"
-          >
-            Everything stays where you left it.
-          </h2>
 
-          <div className="mt-14 grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-10 lg:gap-12">
-            {experienceFeatures.map((feature) => (
-              <article key={feature.title} className="flex flex-col gap-5">
-                <div
-                  className={`relative aspect-square w-full overflow-hidden rounded-2xl ${feature.panelClass}`}
+        {/* ================================================================
+            SECTION 2 — HOW IT WORKS
+            ================================================================ */}
+        <section
+          className="mx-auto w-full max-w-6xl px-6 py-28 md:px-8"
+          aria-labelledby="how-heading"
+        >
+          <ScrollReveal className="text-center">
+            <p className="font-[family-name:var(--font-landing-sans)] text-xs font-semibold uppercase tracking-widest text-[#8B6B57]">
+              How it works
+            </p>
+            <h2
+              id="how-heading"
+              className="mx-auto mt-3 max-w-xl font-[family-name:var(--font-landing-display),Georgia,serif] text-4xl font-semibold leading-tight text-[#2C1A0E] md:text-5xl"
+            >
+              Three steps to your calmer flow.
+            </h2>
+          </ScrollReveal>
+
+          <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {howItWorksSteps.map((step, i) => (
+              <ScrollReveal key={step.step} delay={i * 100}>
+                <article
+                  className="flex flex-col gap-6 rounded-2xl border border-[rgba(155,74,43,0.1)] p-8"
+                  style={{ backgroundColor: step.cardBg }}
                 >
-                  <Image
-                    src={feature.imageSrc}
-                    alt={feature.imageAlt}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    className={feature.imageClass}
-                    priority={false}
-                  />
-                </div>
-                <h3 className="font-[family-name:var(--font-landing-display),Georgia,serif] text-2xl font-semibold text-[#3e2716]">
-                  {feature.title}
-                </h3>
-                <p className="font-[family-name:var(--font-landing-sans)] text-sm leading-relaxed text-[#6f5036]">
-                  {feature.body}
-                </p>
-              </article>
+                  <div className="flex items-center justify-between">
+                    <div
+                      className="flex h-11 w-11 items-center justify-center rounded-xl"
+                      style={{ backgroundColor: step.iconBg }}
+                    >
+                      <step.Icon className="h-5 w-5 text-white" aria-hidden="true" />
+                    </div>
+                    <span
+                      className="font-[family-name:var(--font-landing-sans)] text-xs font-bold tracking-widest text-[#9B4A2B]/40"
+                      aria-hidden="true"
+                    >
+                      {step.step}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="font-[family-name:var(--font-landing-display),Georgia,serif] text-2xl font-semibold text-[#2C1A0E]">
+                      {step.title}
+                    </h3>
+                    <p className="mt-2 font-[family-name:var(--font-landing-sans)] text-sm leading-relaxed text-[#5C3D2A]">
+                      {step.body}
+                    </p>
+                  </div>
+                </article>
+              </ScrollReveal>
             ))}
           </div>
         </section>
 
-        {/* Section 2: The Journey */}
+        {/* ================================================================
+            SECTION 3 — FEATURES DEEP-DIVE
+            ================================================================ */}
         <section
-          className="border-y border-[rgba(143,79,36,0.08)] bg-gradient-to-b from-[#faf3ea] via-[#f5eadc] to-[#f3e6da] py-32"
-          aria-labelledby="journey-heading"
+          className="border-y border-[rgba(155,74,43,0.08)] bg-gradient-to-b from-[#faf3ea] via-[#f5eadc] to-[#f3e6da] py-28"
+          aria-labelledby="features-heading"
+          id="features"
         >
-          <div className="mx-auto grid w-full max-w-6xl gap-14 px-6 md:px-8 lg:grid-cols-2 lg:gap-16 lg:items-center">
-            <div>
-              <p className="font-[family-name:var(--font-landing-sans)] text-xs font-semibold uppercase tracking-widest text-[#6f5036]/85">
-                The journey
+          <div className="mx-auto max-w-6xl px-6 md:px-8">
+            <ScrollReveal className="text-center">
+              <p className="font-[family-name:var(--font-landing-sans)] text-xs font-semibold uppercase tracking-widest text-[#8B6B57]">
+                Features
               </p>
               <h2
-                id="journey-heading"
-                className="mt-3 text-left font-[family-name:var(--font-landing-display),Georgia,serif] text-4xl font-semibold leading-[1.1] tracking-tight text-[#3b2616] md:text-5xl"
+                id="features-heading"
+                className="mx-auto mt-3 max-w-xl font-[family-name:var(--font-landing-display),Georgia,serif] text-4xl font-semibold leading-tight text-[#2C1A0E] md:text-5xl"
               >
-                Three steps to serenity.
+                Everything a reader needs.
               </h2>
+            </ScrollReveal>
 
-              <ol className="mt-12 flex list-none flex-col gap-12 pl-0">
-                <li className="grid grid-cols-[minmax(3.5rem,4.5rem)_1fr] items-start gap-x-5 sm:gap-x-7 md:grid-cols-[minmax(4rem,5rem)_1fr] md:gap-x-8">
-                  <span
-                    className="pointer-events-none select-none text-right font-[family-name:var(--font-landing-display),Georgia,serif] text-[2.65rem] font-semibold leading-none tracking-tight text-[#3b2616]/[0.14] tabular-nums sm:text-[3.05rem] md:text-[3.35rem]"
-                    aria-hidden="true"
-                  >
-                    01
-                  </span>
-                  <div className="min-w-0 pt-1">
-                    <h3 className="font-[family-name:var(--font-landing-display),Georgia,serif] text-xl font-semibold text-[#3e2716]">
-                      Arrive
-                    </h3>
-                    <p className="mt-2 font-[family-name:var(--font-landing-sans)] text-sm leading-relaxed text-[#6f5036]">
-                      Sign in and settle into a reading space that feels like yours—uncluttered and calm.
-                    </p>
-                  </div>
-                </li>
-                <li className="grid grid-cols-[minmax(3.5rem,4.5rem)_1fr] items-start gap-x-5 sm:gap-x-7 md:grid-cols-[minmax(4rem,5rem)_1fr] md:gap-x-8">
-                  <span
-                    className="pointer-events-none select-none text-right font-[family-name:var(--font-landing-display),Georgia,serif] text-[2.65rem] font-semibold leading-none tracking-tight text-[#3b2616]/[0.14] tabular-nums sm:text-[3.05rem] md:text-[3.35rem]"
-                    aria-hidden="true"
-                  >
-                    02
-                  </span>
-                  <div className="min-w-0 pt-1">
-                    <h3 className="font-[family-name:var(--font-landing-display),Georgia,serif] text-xl font-semibold text-[#3e2716]">
-                      Curate
-                    </h3>
-                    <p className="mt-2 font-[family-name:var(--font-landing-sans)] text-sm leading-relaxed text-[#6f5036]">
-                      Upload books and arrange your shelf so what you love is always within reach.
-                    </p>
-                  </div>
-                </li>
-                <li className="grid grid-cols-[minmax(3.5rem,4.5rem)_1fr] items-start gap-x-5 sm:gap-x-7 md:grid-cols-[minmax(4rem,5rem)_1fr] md:gap-x-8">
-                  <span
-                    className="pointer-events-none select-none text-right font-[family-name:var(--font-landing-display),Georgia,serif] text-[2.65rem] font-semibold leading-none tracking-tight text-[#3b2616]/[0.14] tabular-nums sm:text-[3.05rem] md:text-[3.35rem]"
-                    aria-hidden="true"
-                  >
-                    03
-                  </span>
-                  <div className="min-w-0 pt-1">
-                    <h3 className="font-[family-name:var(--font-landing-display),Georgia,serif] text-xl font-semibold text-[#3e2716]">
-                      Read on
-                    </h3>
-                    <p className="mt-2 font-[family-name:var(--font-landing-sans)] text-sm leading-relaxed text-[#6f5036]">
-                      Read, highlight, and pick up exactly where you left off—any time you return.
-                    </p>
-                  </div>
-                </li>
-              </ol>
-            </div>
-
-            <div className="relative min-h-[min(28rem,70vh)] w-full">
-              <div
-                className="flex h-full min-h-[20rem] flex-col overflow-hidden rounded-2xl border border-[rgba(128,82,44,0.14)] bg-[#fffdf8] shadow-xl"
-                role="img"
-                aria-label="App window preview"
-              >
-                <div className="flex items-center gap-2 border-b border-[rgba(128,82,44,0.1)] px-4 py-3.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#e8c4b8]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#e5d9a8]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#c5d4c2]" />
-                </div>
-                <div className="relative flex flex-1 flex-col items-center justify-center gap-5 overflow-hidden px-8 py-14">
+            <div className="mt-20 flex flex-col gap-24">
+              {features.map((feature, i) => (
+                <ScrollReveal key={feature.title}>
                   <div
-                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(143,79,36,0.06),transparent_58%)]"
-                    aria-hidden="true"
-                  />
-                  <Image
-                    src="/bookly logo no bg.png"
-                    alt=""
-                    width={52}
-                    height={52}
-                    className="relative z-[1] opacity-[0.42]"
-                    aria-hidden
-                  />
-                  <p className="relative z-[1] text-center font-[family-name:var(--font-landing-sans)] text-sm font-medium tracking-wide text-[#6f5036]/40">
-                    Your sanctuary is ready.
-                  </p>
-                </div>
-              </div>
+                    className={`flex flex-col gap-10 lg:items-center lg:gap-16 ${
+                      i % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"
+                    }`}
+                  >
+                    {/* Text */}
+                    <div className="flex-1">
+                      <p className="font-[family-name:var(--font-landing-sans)] text-xs font-semibold uppercase tracking-widest text-[#8B6B57]">
+                        {feature.label}
+                      </p>
+                      <h3 className="mt-3 font-[family-name:var(--font-landing-display),Georgia,serif] text-3xl font-semibold leading-tight text-[#2C1A0E] md:text-4xl">
+                        {feature.title}
+                      </h3>
+                      <p className="mt-4 font-[family-name:var(--font-landing-sans)] text-sm leading-relaxed text-[#5C3D2A]">
+                        {feature.body}
+                      </p>
+                      <Link
+                        href="/sign-up"
+                        className="mt-5 inline-flex items-center gap-1.5 font-[family-name:var(--font-landing-sans)] text-sm font-semibold text-[#9B4A2B] transition-colors hover:text-[#C4763A]"
+                      >
+                        Learn more
+                        <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                      </Link>
+                    </div>
+
+                    {/* Illustration */}
+                    <div className="flex-1">
+                      <feature.Illustration />
+                    </div>
+                  </div>
+                </ScrollReveal>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Section 3: CTA */}
+        {/* ================================================================
+            SECTION 4 — TESTIMONIALS
+            ================================================================ */}
         <section
-          className="relative overflow-hidden py-32"
-          aria-labelledby="cta-heading"
+          className="mx-auto w-full max-w-6xl px-6 py-28 md:px-8"
+          aria-labelledby="testimonials-heading"
         >
-          <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(143,79,36,0.09),transparent_65%)]"
-            aria-hidden="true"
-          />
-          <div
-            className="pointer-events-none absolute inset-0 opacity-[0.45]"
-            style={{
-              backgroundImage: `
-                radial-gradient(circle at 50% 50%, transparent 48%, rgba(143, 79, 36, 0.04) 49%, transparent 50%),
-                radial-gradient(circle at 50% 50%, transparent 62%, rgba(143, 79, 36, 0.03) 63%, transparent 64%),
-                radial-gradient(circle at 50% 50%, transparent 76%, rgba(143, 79, 36, 0.025) 77%, transparent 78%)
-              `,
-            }}
-            aria-hidden="true"
-          />
-          <div className="relative z-10 mx-auto flex max-w-2xl flex-col items-center px-6 text-center md:px-8">
-            <h2
-              id="cta-heading"
-              className="font-[family-name:var(--font-landing-display),Georgia,serif] text-4xl font-semibold leading-[1.12] tracking-tight text-[#3b2616] md:text-5xl"
-            >
-              Ready to find your focus?
-            </h2>
-            <p className="mt-5 max-w-md font-[family-name:var(--font-landing-sans)] text-sm leading-relaxed text-[#6f5036]">
-              A calmer shelf, gentler controls, and reading that stays with you—start in minutes.
+          <ScrollReveal className="text-center">
+            <p className="font-[family-name:var(--font-landing-sans)] text-xs font-semibold uppercase tracking-widest text-[#8B6B57]">
+              Social proof
             </p>
-            <Button
-              asChild
-              size="lg"
-              className="mt-10 rounded-full border-0 bg-[#8f4f24] px-10 font-[family-name:var(--font-landing-sans)] font-semibold text-[#fff8ef] shadow-[0_12px_28px_rgba(67,33,10,0.28)] transition-colors hover:bg-[#a45f2f] focus-visible:ring-2 focus-visible:ring-[#8f4f24]/40"
+            <h2
+              id="testimonials-heading"
+              className="mx-auto mt-3 max-w-lg font-[family-name:var(--font-landing-display),Georgia,serif] text-4xl font-semibold leading-tight text-[#2C1A0E] md:text-5xl"
             >
-              <Link href="/sign-in">Start your journey</Link>
-            </Button>
+              Loved by readers.
+            </h2>
+          </ScrollReveal>
+
+          <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {testimonials.map((t, i) => (
+              <ScrollReveal key={t.name} delay={i * 100}>
+                <figure className="flex h-full flex-col rounded-2xl border border-[rgba(155,74,43,0.12)] bg-[rgba(253,248,240,0.88)] p-8 shadow-[0_4px_24px_rgba(155,74,43,0.07)]">
+                  <span
+                    className="font-[family-name:var(--font-landing-display),Georgia,serif] text-5xl leading-none text-[#9B4A2B]/60"
+                    aria-hidden="true"
+                  >
+                    &ldquo;
+                  </span>
+                  <blockquote className="mt-2 flex-1 font-[family-name:var(--font-landing-display),Georgia,serif] text-lg italic leading-snug text-[#2C1A0E]">
+                    {t.quote}
+                  </blockquote>
+                  <figcaption className="mt-6 flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#9B4A2B]/10 font-[family-name:var(--font-landing-sans)] text-xs font-bold text-[#9B4A2B]">
+                      {t.initials}
+                    </div>
+                    <div>
+                      <p className="font-[family-name:var(--font-landing-sans)] text-sm font-semibold text-[#2C1A0E]">
+                        {t.name}
+                      </p>
+                      <p className="font-[family-name:var(--font-landing-sans)] text-xs text-[#8B6B57]">
+                        {t.role}
+                      </p>
+                    </div>
+                  </figcaption>
+                </figure>
+              </ScrollReveal>
+            ))}
           </div>
         </section>
 
-        {/* Section 4: Footer */}
-        <footer className="border-t border-gray-200/50 py-8">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 text-xs text-[#6f5036]/80 md:flex-row md:items-center md:justify-between md:px-8">
-            <p className="font-[family-name:var(--font-landing-sans)]">
-              Bookly · © {currentYear}
+        {/* ================================================================
+            SECTION 5 — PRICING (client component — toggle state)
+            ================================================================ */}
+        <PricingSection />
+
+        {/* ================================================================
+            SECTION 6 — FAQ
+            ================================================================ */}
+        <section
+          className="mx-auto w-full max-w-3xl px-6 py-28 md:px-8"
+          aria-labelledby="faq-heading"
+          id="faq"
+        >
+          <ScrollReveal className="text-center">
+            <p className="font-[family-name:var(--font-landing-sans)] text-xs font-semibold uppercase tracking-widest text-[#8B6B57]">
+              FAQ
             </p>
-            <nav aria-label="Footer">
-              <ul className="flex flex-wrap items-center gap-x-6 gap-y-2 font-[family-name:var(--font-landing-sans)]">
-                <li>
-                  <Link href="#" className="transition-colors hover:text-[#3b2616]">
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="transition-colors hover:text-[#3b2616]">
-                    Terms of Service
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="transition-colors hover:text-[#3b2616]">
-                    Contact Us
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/library" className="transition-colors hover:text-[#3b2616]">
-                    Archive
-                  </Link>
-                </li>
-              </ul>
-            </nav>
+            <h2
+              id="faq-heading"
+              className="mx-auto mt-3 max-w-lg font-[family-name:var(--font-landing-display),Georgia,serif] text-4xl font-semibold leading-tight text-[#2C1A0E] md:text-5xl"
+            >
+              Common questions.
+            </h2>
+          </ScrollReveal>
+
+          <div className="mt-12 rounded-2xl border border-[rgba(155,74,43,0.12)] bg-[rgba(253,248,240,0.88)] px-8 py-2">
+            <FaqAccordion />
+          </div>
+        </section>
+
+        {/* ================================================================
+            FOOTER
+            ================================================================ */}
+        <footer className="border-t border-[rgba(155,74,43,0.12)] bg-[#ecddd0]">
+          <div className="mx-auto w-full max-w-6xl px-6 py-7 md:px-8">
+            <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <nav aria-label="Footer navigation">
+                <ul className="flex flex-wrap gap-x-6 gap-y-2 font-[family-name:var(--font-landing-sans)] text-sm text-[#8B6B57]">
+                  <li><a href="#features" className="transition-colors hover:text-[#2C1A0E]">Features</a></li>
+                  <li><a href="#pricing" className="transition-colors hover:text-[#2C1A0E]">Pricing</a></li>
+                  <li><a href="#faq" className="transition-colors hover:text-[#2C1A0E]">FAQ</a></li>
+                  <li><Link href="#" className="transition-colors hover:text-[#2C1A0E]">Privacy</Link></li>
+                  <li><Link href="#" className="transition-colors hover:text-[#2C1A0E]">Terms</Link></li>
+                </ul>
+              </nav>
+              <p className="font-[family-name:var(--font-landing-sans)] text-xs text-[#8B6B57]">
+                © {currentYear} Bookly
+              </p>
+            </div>
           </div>
         </footer>
       </div>

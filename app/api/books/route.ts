@@ -13,7 +13,7 @@ import {
 } from "@/lib/api/books/errors";
 import { mapDbBookToBookDto } from "@/lib/books/dto";
 
-const DEBUG_LOG_PATH = "C:/Users/LENOVO/Documents/project/elib/debug-books.log";
+const DEBUG_LOG_PATH = "C:/Users/LENOVO/Documents/project/bookly/debug-books.log";
 
 async function logDebug(message: string) {
   try {

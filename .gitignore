@@ -38,9 +38,6 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# markdown files
-*.md
-
 # vercel
 .vercel
 

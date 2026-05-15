@@ -1,0 +1,24 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e11]
+  - iframe [ref=e13]:
+    - generic [active] [ref=f1e1]:
+      - status
+      - toolbar "Reader controls" [ref=f1e4]:
+        - generic [ref=f1e5]:
+          - button "Table of contents" [ref=f1e6] [cursor=pointer]:
+            - img [ref=f1e7]
+          - button "Text size" [ref=f1e10] [cursor=pointer]: Aa
+          - generic [ref=f1e11]:
+            - button "Bookmark this page" [ref=f1e12] [cursor=pointer]:
+              - img [ref=f1e13]
+            - generic [ref=f1e15]:
+              - generic [ref=f1e16]: Layout
+              - generic [ref=f1e17]:
+                - button "Layout" [ref=f1e18] [cursor=pointer]:
+                  - generic [ref=f1e19]: Continuous scroll
+                  - img [ref=f1e21]
+                - combobox [ref=f1e23]
+            - button "Close book and return to library" [ref=f1e24] [cursor=pointer]:
+              - img [ref=f1e25]
