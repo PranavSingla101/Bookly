@@ -3,14 +3,51 @@
 Update this file after every meaningful implementation change.
 
 ## Current Phase
-
-In Progress — Landing Page Redesign
+None
 
 ## Current Goal
-
-Full conversion-focused landing page per `feature-specs/01-Landing-page-redesign.md`.
+None
 
 ## Completed
+
+- **Database Table Privileges Grant for Bookmarks & Annotations** (May 2026):
+  - Fixed a database-level `403 Forbidden` error that rejected all REST reads and inserts on the `book_annotations` table.
+  - Discovered that the database roles `anon`, `authenticated`, and `service_role` lacked standard permissions (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) on the `book_annotations` table, blocking PostgREST queries even under the service role client.
+  - Granted full privileges on `public.book_annotations` to these roles, restoring complete backend save and load operations.
+  - Appended `GRANT` statement to the bottom of the SQL migration file `20260320000000_books_progress_and_annotations.sql` for automated deployment and reset safety.
+  - Added thorough server-side console diagnostic logging inside the annotations REST API (`GET`, `POST`, `PATCH`, `DELETE` routes) for real-time visibility.
+  - Verified compilation and build stability by successfully executing `npm run build` with zero errors or warnings.
+
+- **Bookmarks Pipeline Audit & Build Verification** (May 2026):
+  - Audited the entire bookmarks and annotations pipeline end-to-end (Database schema, Supabase columns, backend PATCH/DELETE/GET/POST routes, Next.js page controller, postMessage iframe events, drag-to-reposition logic, and visual styling).
+  - Confirmed the system fully saves bookmark positions (`yOffset`), recovers them correctly on book reload, and scrolls to the exact resume coordinates when opening a book.
+  - Verified that hover delete (trash button) and repositioning (drag grip) interactions work flawlessly and update the database in real-time.
+  - Successfully ran `npm run build` to verify perfect TypeScript and Next.js compilation with zero errors or warnings.
+
+- **Single-Page Paginated Layout** (`packages/foliate-js/paginator.js`, `packages/foliate-js/reader.js`):
+  - Fixed the paginated view displaying a two-page column spread on wide screens.
+  - Changed the default CSS property `--_max-column-count` from `2` to `1` in `paginator.js`.
+  - Added explicit dynamic `max-column-count="1"` attribute enforcement in `reader.js`'s `#applyPaginatorLayout` method.
+  - Ensured the paginator renders as a clean, centralized, single-column reading column on all orientations and screen sizes, matching premium web reading app standards.
+
+- **Progress and Bookmark Saving on Close** (`packages/foliate-js/reader.js`, `app/library/[id]/read/page.tsx`, `lib/books/api.ts`):
+  - Resolved the route-navigation race condition that aborted progress-sync fetches when exiting the reader.
+  - Implemented an asynchronous close bridge (`bookly:close` postMessage channel) that handles saving before navigating to the library.
+  - Added support for the standard `{ keepalive: true }` parameter in `updateBookProgress` and all annotations mutations (`createBookAnnotation`, `updateBookAnnotation`, `deleteBookAnnotation`) to guarantee request delivery even if the tab or page is unmounted.
+  - Guarded bookmark interactions by disabling hover drag/delete controls while a bookmark strip has a temporary unsaved ID, avoiding database-sync anomalies.
+  - Synchronized Next.js client-side annotations cache instantly on creation, update, and delete events to ensure zero stale reads.
+  - Added a premium, theme-matching visual overlay ("Saving reading progress...") with a custom `--accent-primary` rotating spinner and `backdrop-blur-sm` filter to provide rich, visual confirmation during state saving.
+
+- **Visible, Draggable Bookmark Strip** (`packages/foliate-js/reader.js`, `packages/foliate-js/reader.html`, `app/library/[id]/read/page.tsx`, `lib/books/api.ts`):
+  - Added visible, enlarged bookmark strip (48x24px, `#1B3A6B`, left-rounded only, with drop-shadow) that scrolls with the text in continuous scroll mode and mounts as a fixed overlay in paginated mode.
+  - Implemented dual-icon hover overlay (a white trash delete icon with a red hover transition, and a classic 6-dot vertical drag grip indicator).
+  - Implemented vertical dragging support for bookmark strips in continuous scroll mode to allow precise repositioning.
+  - Added optimistic deletion of the bookmark from both DOM and database.
+  - Optimized annotations retrieval via a ref cache (`cachedAnnotationsRef`) in `page.tsx` to prevent duplicate network calls.
+  - Resolved loading race condition by implementing a `bookly:reader-ready` postMessage signal from the iframe, ensuring annotations only load after the viewer is fully constructed.
+  - Added duplicate-rendering guards to both bookmark strips and highlights/notes inside `reader.js` to ensure bulletproof rendering integrity.
+  - Wired point restoration upon opening a book to prioritize the most recently updated bookmark, falling back to `readingCfi` (last read position) or beginning of the book.
+  - Implemented optimistic creation with temp-to-permanent ID swapping on server response, and drag updates synchronization to the database.
 
 - **Continuous scroll — two layout modes** (`packages/foliate-js/reader.js`, `packages/foliate-js/reader.html`):
   - Added **Book mode** (centred 760 px column, dark margins, box-shadow page effect) and **Full mode** (edge-to-edge)
@@ -49,7 +86,6 @@ Full conversion-focused landing page per `feature-specs/01-Landing-page-redesign
 
 ## Next Up
 
-- Verify TypeScript build passes (`npm run build`)
 - Replace placeholder testimonials with real quotes when available
 - Add real feature screenshots/illustrations to replace icon mock panels (open question from spec)
 - Collect and confirm pricing tiers (open question from spec)

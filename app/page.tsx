@@ -291,7 +291,7 @@ export default async function LandingPage() {
           <header className="landing-topbar">
             <Link href="/" className="landing-brand" aria-label="Bookly home">
               <Image
-                src="/bookly logo no bg.png"
+                src="/Bookly_logo.png"
                 alt="Bookly logo"
                 width={32}
                 height={32}

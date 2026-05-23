@@ -28,8 +28,8 @@ export const metadata: Metadata = {
   title: "Bookly",
   description: "Upload, manage, and read your EPUB library from any device.",
   icons: {
-    icon: "/bookly logo no bg.png",
-    apple: "/bookly logo no bg.png",
+    icon: "/Bookly_logo.png",
+    apple: "/Bookly_logo.png",
   },
   manifest: "/manifest.json",
   other: {

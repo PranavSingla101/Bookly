@@ -15,12 +15,15 @@ export async function PATCH(
   try {
     const { supabase, profileId } = await requireUserProfile();
     const { id, annotationId } = await props.params;
+    console.log("[annotations API] PATCH update request for book:", id, "annotation:", annotationId, "profile:", profileId);
 
     const parsed = await parseAnnotationPatchInput(request);
     if (!parsed.ok) {
+      console.error("[annotations API] PATCH parsed failed:", parsed.error);
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
     const update = parsed.data;
+    console.log("[annotations API] PATCH parsed update payload:", update);
 
     const { data, error } = await supabase
       .from("book_annotations")
@@ -32,11 +35,14 @@ export async function PATCH(
       .single();
 
     if (error || !data) {
+      console.error("[annotations API] PATCH update error or no data found:", error);
       return NextResponse.json({ error: "Annotation not found or update failed" }, { status: 404 });
     }
 
+    console.log("[annotations API] PATCH update success for ID:", data.id);
     return NextResponse.json({ annotation: data });
   } catch (error) {
+    console.error("[annotations API] Unexpected error in PATCH handler:", error);
     return handleCommonApiError(error);
   }
 }
@@ -48,6 +54,7 @@ export async function DELETE(
   try {
     const { supabase, profileId } = await requireUserProfile();
     const { id, annotationId } = await props.params;
+    console.log("[annotations API] DELETE request for book:", id, "annotation:", annotationId, "profile:", profileId);
 
     const { error } = await supabase
       .from("book_annotations")
@@ -57,11 +64,14 @@ export async function DELETE(
       .eq("profile_id", profileId);
 
     if (error) {
+      console.error("[annotations API] DELETE failed:", error);
       return NextResponse.json({ error: "Failed to delete annotation" }, { status: 500 });
     }
 
+    console.log("[annotations API] DELETE success for ID:", annotationId);
     return NextResponse.json({ ok: true });
   } catch (error) {
+    console.error("[annotations API] Unexpected error in DELETE handler:", error);
     return handleCommonApiError(error);
   }
 }

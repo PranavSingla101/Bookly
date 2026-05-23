@@ -177,6 +177,7 @@ export async function updateBookProgress(input: {
   cfi: string;
   progress?: number;
   updatedAt?: string;
+  keepalive?: boolean;
 }) {
   const response = await fetch(`/api/books/${input.bookId}`, {
     method: "PATCH",
@@ -188,6 +189,7 @@ export async function updateBookProgress(input: {
       progress: input.progress,
       updatedAt: input.updatedAt,
     }),
+    keepalive: input.keepalive,
   });
 
   if (!response.ok) {
@@ -215,6 +217,7 @@ export async function createBookAnnotation(input: {
   cfiRange: string;
   type: string;
   payload?: Record<string, unknown>;
+  keepalive?: boolean;
 }) {
   const response = await fetch(`/api/books/${input.bookId}/annotations`, {
     method: "POST",
@@ -226,6 +229,7 @@ export async function createBookAnnotation(input: {
       type: input.type,
       payload: input.payload ?? {},
     }),
+    keepalive: input.keepalive,
   });
   if (!response.ok) {
     throw new BooksApiError(
@@ -236,23 +240,21 @@ export async function createBookAnnotation(input: {
   return (await response.json()) as AnnotationResponse;
 }
 
-export async function updateBookAnnotation(input: {
-  bookId: string;
-  annotationId: string;
-  cfiRange?: string;
-  type?: string;
-  payload?: Record<string, unknown>;
-}) {
-  const response = await fetch(`/api/books/${input.bookId}/annotations/${input.annotationId}`, {
+export async function updateBookAnnotation(
+  bookId: string,
+  annotationId: string,
+  payload: Record<string, unknown>,
+  keepalive?: boolean
+): Promise<void> {
+  const response = await fetch(`/api/books/${bookId}/annotations/${annotationId}`, {
     method: "PATCH",
     headers: {
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      cfiRange: input.cfiRange,
-      type: input.type,
-      payload: input.payload,
+      payload,
     }),
+    keepalive,
   });
   if (!response.ok) {
     throw new BooksApiError(
@@ -260,12 +262,12 @@ export async function updateBookAnnotation(input: {
       response.status
     );
   }
-  return (await response.json()) as AnnotationResponse;
 }
 
-export async function deleteBookAnnotation(bookId: string, annotationId: string) {
+export async function deleteBookAnnotation(bookId: string, annotationId: string, keepalive?: boolean) {
   const response = await fetch(`/api/books/${bookId}/annotations/${annotationId}`, {
     method: "DELETE",
+    keepalive,
   });
   if (!response.ok) {
     throw new BooksApiError(

@@ -42,8 +42,8 @@ export default function SignInPage() {
             variables: {
               colorPrimary: "#9B4A2B",
               colorBackground: "#fdf8f0",
-              colorText: "#2C1A0E",
-              colorTextSecondary: "#5C3D2A",
+              colorForeground: "#2C1A0E",
+              colorMutedForeground: "#5C3D2A",
               borderRadius: "0rem",
               fontFamily: "var(--font-auth-sans), Nunito, sans-serif",
               fontSize: "0.9rem",

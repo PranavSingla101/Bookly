@@ -56,3 +56,7 @@ create policy "book_annotations_delete_own"
   on public.book_annotations
   for delete
   using (profile_id = (select auth.uid()));
+
+-- Grant table privileges to public roles so PostgREST can query and insert annotations
+grant all on table public.book_annotations to anon, authenticated, service_role;
+

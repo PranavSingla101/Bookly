@@ -14,6 +14,7 @@ import {
   fetchBookReaderEntry,
   updateBookProgress,
   createBookAnnotation,
+  updateBookAnnotation,
   deleteBookAnnotation,
 } from "@/lib/books/api";
 
@@ -26,23 +27,36 @@ export default function BookReaderPage() {
   const [initialCfi, setInitialCfi] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
+  const [isSavingAndClosing, setIsSavingAndClosing] = useState(false);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
   /** Last CFI we sent to the server — skip duplicate syncs. */
   const lastSyncedCfiRef = useRef<string | null>(null);
   /** Dismiss timer for the restore-error toast. */
   const restoreErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cachedAnnotationsRef = useRef<import("@/lib/books/api").BookAnnotation[] | null>(null);
 
   // ─── Fetch book data + reader entry in parallel ────────────────────────────
   useEffect(() => {
     if (!bookId) return;
     let cancelled = false;
 
-    void Promise.all([fetchBookReaderEntry(bookId), fetchBook(bookId)])
-      .then(([readerResult, bookResult]) => {
+    // Graceful fallback: annotations failure doesn't kill the reader
+    const safeAnnotations = fetchBookAnnotations(bookId).catch(() => ({ annotations: [] }));
+
+    void Promise.all([fetchBookReaderEntry(bookId), fetchBook(bookId), safeAnnotations])
+      .then(([readerResult, bookResult, annotationsResult]) => {
         if (cancelled) return;
+
+        // Cache for reuse in handleIframeLoad — avoids a second fetch
+        cachedAnnotationsRef.current = annotationsResult.annotations;
+
+        // Pick resume CFI: most recent bookmark > last read position > null
+        const mostRecentBookmark = annotationsResult.annotations
+          .find((a) => a.annotation_type === "bookmark");
+
         setReaderAssetUrl(readerResult.url);
-        setInitialCfi(bookResult.book.readingCfi ?? null);
+        setInitialCfi(mostRecentBookmark?.cfi_range ?? bookResult.book.readingCfi ?? null);
       })
       .catch((error) => {
         if (cancelled) return;
@@ -80,6 +94,44 @@ export default function BookReaderPage() {
         return;
       }
 
+      // Close and save progress notification from reader.js
+      if (data.type === "bookly:close") {
+        const { cfi, progress, updatedAt, returnUrl } = data as {
+          cfi: string | null;
+          progress: number;
+          updatedAt: string;
+          returnUrl: string;
+        };
+
+        setIsSavingAndClosing(true);
+
+        const navigateToReturn = () => {
+          window.location.assign(returnUrl);
+        };
+
+        if (cfi) {
+          // 3-second safety timeout so user is never stuck if the network hangs
+          const timeoutId = setTimeout(() => {
+            console.warn("[reader] Close progress sync timed out, navigating");
+            navigateToReturn();
+          }, 3000);
+
+          updateBookProgress({ bookId, cfi, progress, updatedAt, keepalive: true })
+            .then(() => {
+              clearTimeout(timeoutId);
+              navigateToReturn();
+            })
+            .catch((err) => {
+              console.warn("[reader] Close progress sync failed:", err);
+              clearTimeout(timeoutId);
+              navigateToReturn();
+            });
+        } else {
+          navigateToReturn();
+        }
+        return;
+      }
+
       // CFI restore failure notification from reader.js
       if (data.type === "bookly:restore-failed") {
         if (restoreErrorTimerRef.current) clearTimeout(restoreErrorTimerRef.current);
@@ -90,6 +142,12 @@ export default function BookReaderPage() {
         return;
       }
 
+      // Iframe reader is fully ready to render annotations
+      if (data.type === "bookly:reader-ready") {
+        handleIframeLoad();
+        return;
+      }
+
       // Annotation create (highlight or note)
       if (data.type === "bookly:annotation-create") {
         const { cfiRange, annotationType, payload } = data as {
@@ -97,30 +155,66 @@ export default function BookReaderPage() {
           annotationType: string;
           payload: Record<string, unknown>;
         };
-        createBookAnnotation({ bookId, cfiRange, type: annotationType, payload }).catch(
-          (err) => console.warn("[reader] Annotation save failed:", err)
-        );
+        createBookAnnotation({ bookId, cfiRange, type: annotationType, payload })
+          .then((result) => {
+            if (cachedAnnotationsRef.current) {
+              cachedAnnotationsRef.current = [result.annotation, ...cachedAnnotationsRef.current];
+            }
+          })
+          .catch((err) => console.warn("[reader] Annotation save failed:", err));
         return;
       }
 
       // Bookmark creation (point CFI, no range)
       if (data.type === "bookly:bookmark-create") {
-        const { cfi } = data as { cfi: string };
+        const { cfi, yOffset } = data as { cfi: string; yOffset: number };
         createBookAnnotation({
           bookId,
           cfiRange: cfi,
           type: "bookmark",
-          payload: { label: "Bookmark" },
-        }).catch((err) => console.warn("[reader] Bookmark save failed:", err));
+          payload: { label: "Bookmark", yOffset },
+        })
+          .then((result) => {
+            if (cachedAnnotationsRef.current) {
+              cachedAnnotationsRef.current = [result.annotation, ...cachedAnnotationsRef.current];
+            }
+            iframeRef.current?.contentWindow?.postMessage(
+              { type: "bookly:bookmark-saved", annotation: result.annotation },
+              "*"
+            );
+          })
+          .catch((err) => console.warn("[reader] Bookmark save failed:", err));
+        return;
+      }
+
+      // Bookmark update
+      if (data.type === "bookly:bookmark-update") {
+        const { id, payload } = data as {
+          id: string;
+          payload: Record<string, unknown>;
+        };
+        updateBookAnnotation(bookId, id, payload)
+          .then(() => {
+            if (cachedAnnotationsRef.current) {
+              cachedAnnotationsRef.current = cachedAnnotationsRef.current.map((a) =>
+                a.id === id ? { ...a, payload: { ...a.payload, ...payload } } : a
+              );
+            }
+          })
+          .catch((err) => console.warn("[reader] Bookmark update failed:", err));
         return;
       }
 
       // Annotation deletion
       if (data.type === "bookly:annotation-delete") {
         const { id, cfiRange } = data as { id: string; cfiRange: string };
-        deleteBookAnnotation(bookId, id).catch((err) =>
-          console.warn("[reader] Annotation delete failed:", err)
-        );
+        deleteBookAnnotation(bookId, id)
+          .then(() => {
+            if (cachedAnnotationsRef.current) {
+              cachedAnnotationsRef.current = cachedAnnotationsRef.current.filter((a) => a.id !== id);
+            }
+          })
+          .catch((err) => console.warn("[reader] Annotation delete failed:", err));
         // Tell the reader iframe to remove the rendered highlight
         iframeRef.current?.contentWindow?.postMessage(
           { type: "bookly:remove-annotation", cfiRange },
@@ -138,7 +232,11 @@ export default function BookReaderPage() {
   const handleIframeLoad = useCallback(async () => {
     if (!bookId) return;
     try {
-      const { annotations } = await fetchBookAnnotations(bookId);
+      // Reuse cached annotations if available; only re-fetch if the ref was cleared
+      const { annotations } = cachedAnnotationsRef.current !== null
+        ? { annotations: cachedAnnotationsRef.current }
+        : await fetchBookAnnotations(bookId);
+
       iframeRef.current?.contentWindow?.postMessage(
         { type: "bookly:load-annotations", annotations },
         "*"
@@ -233,6 +331,44 @@ export default function BookReaderPage() {
 
   return (
     <div className="book-reader-shell">
+      {isSavingAndClosing && (
+        <div
+          role="alert"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 99999,
+            background: "rgba(13, 10, 8, 0.85)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "1.5rem",
+          }}
+        >
+          {/* Beautiful spinning circle using accent primary */}
+          <div
+            style={{
+              width: "2.5rem",
+              height: "2.5rem",
+              borderRadius: "50%",
+              border: "3px solid #2c2118",
+              borderTopColor: "#b5703a",
+              animation: "spin 1s linear infinite",
+            }}
+          />
+          <p style={{ color: "#f2ede6", fontFamily: "var(--font-sans)", fontSize: "0.95rem", letterSpacing: "0.02em" }}>
+            Saving reading progress...
+          </p>
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      )}
       {restoreError && (
         <div
           role="alert"
