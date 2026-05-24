@@ -28,6 +28,17 @@ export default function BookReaderPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [isSavingAndClosing, setIsSavingAndClosing] = useState(false);
+  const [isOpeningAndRestoring, setIsOpeningAndRestoring] = useState(true);
+
+  // Safety timeout: automatically dismiss the opening overlay after 6 seconds to prevent get-stuck scenarios
+  useEffect(() => {
+    if (!isOpeningAndRestoring) return;
+    const timer = setTimeout(() => {
+      console.warn("[reader] Opening overlay safety timeout reached, forcing dismissal");
+      setIsOpeningAndRestoring(false);
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [isOpeningAndRestoring]);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
   /** Last CFI we sent to the server — skip duplicate syncs. */
@@ -139,12 +150,14 @@ export default function BookReaderPage() {
           "Reading progress could not be restored. Starting from the beginning."
         );
         restoreErrorTimerRef.current = setTimeout(() => setRestoreError(null), 5000);
+        setIsOpeningAndRestoring(false);
         return;
       }
 
       // Iframe reader is fully ready to render annotations
       if (data.type === "bookly:reader-ready") {
         handleIframeLoad();
+        setIsOpeningAndRestoring(false);
         return;
       }
 
@@ -155,13 +168,35 @@ export default function BookReaderPage() {
           annotationType: string;
           payload: Record<string, unknown>;
         };
-        createBookAnnotation({ bookId, cfiRange, type: annotationType, payload })
+        createBookAnnotation({ bookId, cfiRange, type: annotationType, payload, keepalive: true })
           .then((result) => {
             if (cachedAnnotationsRef.current) {
               cachedAnnotationsRef.current = [result.annotation, ...cachedAnnotationsRef.current];
             }
+            iframeRef.current?.contentWindow?.postMessage(
+              { type: "bookly:annotation-saved", cfiRange, annotation: result.annotation },
+              "*"
+            );
           })
           .catch((err) => console.warn("[reader] Annotation save failed:", err));
+        return;
+      }
+
+      // Annotation update (color change from annotation popup)
+      if (data.type === "bookly:annotation-update") {
+        const { id, payload: newPayload } = data as {
+          id: string;
+          payload: Record<string, unknown>;
+        };
+        updateBookAnnotation(bookId, id, newPayload, true)
+          .then(() => {
+            if (cachedAnnotationsRef.current) {
+              cachedAnnotationsRef.current = cachedAnnotationsRef.current.map((a) =>
+                a.id === id ? { ...a, payload: { ...a.payload, ...newPayload } } : a
+              );
+            }
+          })
+          .catch((err) => console.warn("[reader] Annotation update failed:", err));
         return;
       }
 
@@ -173,6 +208,7 @@ export default function BookReaderPage() {
           cfiRange: cfi,
           type: "bookmark",
           payload: { label: "Bookmark", yOffset },
+          keepalive: true,
         })
           .then((result) => {
             if (cachedAnnotationsRef.current) {
@@ -193,7 +229,7 @@ export default function BookReaderPage() {
           id: string;
           payload: Record<string, unknown>;
         };
-        updateBookAnnotation(bookId, id, payload)
+        updateBookAnnotation(bookId, id, payload, true)
           .then(() => {
             if (cachedAnnotationsRef.current) {
               cachedAnnotationsRef.current = cachedAnnotationsRef.current.map((a) =>
@@ -208,7 +244,7 @@ export default function BookReaderPage() {
       // Annotation deletion
       if (data.type === "bookly:annotation-delete") {
         const { id, cfiRange } = data as { id: string; cfiRange: string };
-        deleteBookAnnotation(bookId, id)
+        deleteBookAnnotation(bookId, id, true)
           .then(() => {
             if (cachedAnnotationsRef.current) {
               cachedAnnotationsRef.current = cachedAnnotationsRef.current.filter((a) => a.id !== id);
@@ -338,8 +374,7 @@ export default function BookReaderPage() {
             position: "fixed",
             inset: 0,
             zIndex: 99999,
-            background: "rgba(13, 10, 8, 0.85)",
-            backdropFilter: "blur(4px)",
+            background: "#0d0a08", // Solid dark background to completely fill the sides and hide reader content
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -363,6 +398,43 @@ export default function BookReaderPage() {
           </p>
           <style>{`
             @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      )}
+      {isOpeningAndRestoring && (
+        <div
+          role="alert"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 99999,
+            background: "#0d0a08", // Absolute solid deep background so there is no flash of cover page
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "1.5rem",
+          }}
+        >
+          {/* Beautiful spinning circle matching the theme and saving progress overlay */}
+          <div
+            style={{
+              width: "2.5rem",
+              height: "2.5rem",
+              borderRadius: "50%",
+              border: "3px solid #2c2118",
+              borderTopColor: "#b5703a",
+              animation: "spin-loader 1s linear infinite",
+            }}
+          />
+          <p style={{ color: "#f2ede6", fontFamily: "var(--font-sans)", fontSize: "0.95rem", letterSpacing: "0.02em" }}>
+            Opening book...
+          </p>
+          <style>{`
+            @keyframes spin-loader {
               0% { transform: rotate(0deg); }
               100% { transform: rotate(360deg); }
             }

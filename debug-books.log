@@ -96,3 +96,11 @@
 2026-05-23T21:32:59.048Z GET /api/books success count=1
 2026-05-23T21:33:15.545Z GET /api/books profile=bf5fe41d-313f-4089-be9e-0b842ddb358e
 2026-05-23T21:33:15.670Z GET /api/books success count=1
+2026-05-23T21:39:18.575Z GET /api/books profile=bf5fe41d-313f-4089-be9e-0b842ddb358e
+2026-05-23T21:39:18.645Z GET /api/books success count=1
+2026-05-23T21:52:20.321Z GET /api/books profile=bf5fe41d-313f-4089-be9e-0b842ddb358e
+2026-05-23T21:52:20.595Z GET /api/books success count=1
+2026-05-24T17:31:42.764Z GET /api/books profile=bf5fe41d-313f-4089-be9e-0b842ddb358e
+2026-05-24T17:31:42.875Z GET /api/books success count=1
+2026-05-24T17:31:44.918Z GET /api/books profile=bf5fe41d-313f-4089-be9e-0b842ddb358e
+2026-05-24T17:31:44.990Z GET /api/books success count=1

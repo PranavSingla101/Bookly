@@ -7,12 +7,7 @@ import {
   BookOpen,
   RefreshCw,
   PenLine,
-  BarChart3,
-  Library,
   ArrowRight,
-  BookMarked,
-  Smartphone,
-  Monitor,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -82,15 +77,9 @@ const features = [
     Illustration: SyncMockIllustration,
   },
   {
-    label: "Habits",
-    title: "Reading streaks & stats",
-    body: "Gentle progress tracking to keep the momentum going. Accountability without gamification pressure.",
-    Illustration: StatsMockIllustration,
-  },
-  {
     label: "Library",
-    title: "Universal library support",
-    body: "Import EPUBs, PDFs, and web articles into one organised shelf. Your entire reading life in one place.",
+    title: "Epub support",
+    body: "Import any valid DRM-free EPUB file to your personal cloud. Read on any device with standard-compliant native rendering.",
     Illustration: LibraryMockIllustration,
   },
 ];
@@ -98,7 +87,7 @@ const features = [
 const testimonials = [
   {
     quote:
-      "Bookly is the first reading app that actually feels like reading — not using software.",
+      "Bookly is the first reading app that actually feels like reading, not using software.",
     name: "Meera S.",
     role: "Avid reader",
     initials: "MS",
@@ -121,141 +110,62 @@ const testimonials = [
 
 function ReaderMockIllustration() {
   return (
-    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#1e120a]">
-      <div className="absolute inset-0 flex flex-col">
-        <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
-          <span className="h-2 w-2 rounded-full bg-white/20" />
-          <span className="h-2 w-2 rounded-full bg-white/20" />
-          <span className="h-2 w-2 rounded-full bg-white/20" />
-          <BookOpen className="ml-auto h-3.5 w-3.5 text-white/25" aria-hidden="true" />
-        </div>
-        <div className="flex flex-1 flex-col items-center justify-center gap-2.5 px-10 py-6">
-          <div className="h-2.5 w-3/5 rounded-full bg-white/20" />
-          <div className="h-1.5 w-full rounded-full bg-white/10" />
-          <div className="h-1.5 w-11/12 rounded-full bg-white/10" />
-          <div className="h-1.5 w-full rounded-full bg-white/10" />
-          <div className="h-1.5 w-4/5 rounded-full bg-white/10" />
-          <div className="mt-2 h-1.5 w-full rounded-full bg-white/10" />
-          <div className="h-1.5 w-11/12 rounded-full bg-white/10" />
-          <div className="h-1.5 w-full rounded-full bg-white/10" />
-        </div>
-      </div>
+    <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-[#1a1a1a] bg-black shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
+      <Image
+        src="/Distraction free reading mode.png"
+        alt="Distraction-free reading mode screenshot"
+        fill
+        sizes="(max-width: 1024px) 100vw, 50vw"
+        className="object-cover object-top"
+      />
     </div>
   );
 }
 
 function HighlightsMockIllustration() {
   return (
-    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[rgba(155,74,43,0.1)] bg-[#fdf8f0]">
-      <div className="absolute inset-0 flex flex-col justify-center gap-2.5 px-8 py-6">
-        <div className="h-2 w-full rounded-full bg-[rgba(155,74,43,0.08)]" />
-        <div className="h-2 w-11/12 rounded-full bg-[rgba(196,118,58,0.28)]" />
-        <div className="h-2 w-full rounded-full bg-[rgba(155,74,43,0.08)]" />
-        <div className="h-2 w-4/5 rounded-full bg-[rgba(155,74,43,0.08)]" />
-        <div className="h-2 w-full rounded-full bg-[rgba(155,74,43,0.08)]" />
-        <div className="h-2 w-11/12 rounded-full bg-[rgba(155,74,43,0.2)]" />
-        <div className="h-2 w-full rounded-full bg-[rgba(155,74,43,0.08)]" />
-        <div className="mt-1 flex items-center gap-2">
-          <div className="h-6 w-6 rounded bg-[rgba(196,118,58,0.15)] p-1">
-            <PenLine className="h-full w-full text-[#9B4A2B]" aria-hidden="true" />
-          </div>
-          <div className="h-1.5 w-24 rounded-full bg-[rgba(155,74,43,0.15)]" />
-        </div>
-      </div>
+    <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-[#1a1a1a] bg-black shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
+      <Image
+        src="/Highlights_notes_landing_page.png"
+        alt="Smart highlights & notes screenshot"
+        fill
+        sizes="(max-width: 1024px) 100vw, 50vw"
+        className="object-cover object-top"
+      />
     </div>
   );
 }
 
 function SyncMockIllustration() {
   return (
-    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[rgba(155,74,43,0.1)] bg-[#fdf8f0]">
-      <div className="absolute inset-0 flex items-center justify-center gap-6 px-8">
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex h-16 w-11 items-center justify-center rounded-xl border-2 border-[rgba(155,74,43,0.25)] bg-white/70">
-            <Smartphone className="h-6 w-6 text-[#9B4A2B]/50" aria-hidden="true" />
-          </div>
-          <div className="flex flex-col gap-1">
-            <div className="h-1 w-10 rounded-full bg-[#9B4A2B]/20" />
-            <div className="h-1 w-7 rounded-full bg-[#9B4A2B]/15" />
-          </div>
-        </div>
-        <RefreshCw className="h-7 w-7 text-[#9B4A2B]/35" aria-hidden="true" />
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex h-16 w-20 items-center justify-center rounded-xl border-2 border-[rgba(155,74,43,0.25)] bg-white/70">
-            <Monitor className="h-7 w-7 text-[#9B4A2B]/50" aria-hidden="true" />
-          </div>
-          <div className="flex flex-col gap-1">
-            <div className="h-1 w-14 rounded-full bg-[#9B4A2B]/20" />
-            <div className="h-1 w-10 rounded-full bg-[#9B4A2B]/15" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatsMockIllustration() {
-  const bars = [40, 65, 50, 80, 70, 90, 75];
-  const days = ["M", "T", "W", "T", "F", "S", "S"];
-  return (
-    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[rgba(155,74,43,0.1)] bg-[#fdf8f0] px-8 py-8">
-      <div className="flex items-end gap-2" style={{ height: "6rem" }}>
-        {bars.map((h, i) => (
-          <div
-            key={i}
-            className="flex-1 rounded-t transition-none"
-            style={{
-              height: `${h}%`,
-              background: i === 5 ? "#9B4A2B" : "rgba(155,74,43,0.2)",
-            }}
-          />
-        ))}
-      </div>
-      <div className="mt-1.5 flex justify-between">
-        {days.map((d, i) => (
-          <span
-            key={i}
-            className="flex-1 text-center font-[family-name:var(--font-landing-sans)] text-[10px] text-[#8B6B57]/70"
-          >
-            {d}
-          </span>
-        ))}
-      </div>
-      <div className="mt-4 flex items-center gap-2">
-        <BarChart3 className="h-4 w-4 text-[#9B4A2B]" aria-hidden="true" />
-        <span className="font-[family-name:var(--font-landing-sans)] text-xs font-semibold text-[#5C3D2A]">
-          7-day reading streak
-        </span>
-      </div>
+    <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-[#1a1a1a] bg-black shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
+      <Image
+        src="/Saving_reading progress.png"
+        alt="Progress sync across sessions screenshot"
+        fill
+        sizes="(max-width: 1024px) 100vw, 50vw"
+        className="object-contain"
+      />
     </div>
   );
 }
 
 function LibraryMockIllustration() {
-  const formats = [
-    { label: "EPUB", Icon: BookOpen, color: "#9B4A2B" },
-    { label: "PDF", Icon: BookMarked, color: "#C4763A" },
-    { label: "Article", Icon: Library, color: "#6a7a8B" },
-  ];
   return (
-    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[rgba(155,74,43,0.1)] bg-[#fdf8f0]">
-      <div className="absolute inset-0 flex items-center justify-center p-8">
-        <div className="grid w-full grid-cols-3 gap-3">
-          {formats.map(({ label, Icon, color }) => (
-            <div
-              key={label}
-              className="flex flex-col items-center gap-2.5 rounded-xl border border-[rgba(155,74,43,0.12)] bg-white/70 p-4"
-            >
-              <Icon className="h-8 w-8" style={{ color }} aria-hidden="true" />
-              <span
-                className="font-[family-name:var(--font-landing-sans)] text-xs font-semibold"
-                style={{ color }}
-              >
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
+    <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-[#1a1a1a] bg-[#0d0d0d] shadow-[0_20px_60px_rgba(0,0,0,0.4)] flex flex-col items-center justify-center gap-5 text-center">
+      <div className="h-16 w-16 rounded-2xl bg-[#9B4A2B]/25 flex items-center justify-center text-[#C4763A]">
+        <BookOpen className="h-9 w-9" aria-hidden="true" />
+      </div>
+      <div>
+        <span className="font-[family-name:var(--font-landing-sans)] text-xs font-bold tracking-widest text-[#C4763A] uppercase">
+          Format Support
+        </span>
+        <h4 className="mt-1 font-[family-name:var(--font-landing-display),Georgia,serif] text-2xl font-bold text-white">
+          EPUB
+        </h4>
+        <p className="mt-2 font-[family-name:var(--font-landing-sans)] text-xs text-white/45 leading-relaxed max-w-[200px]">
+          DRM-free standard reflowable layout rendering
+        </p>
       </div>
     </div>
   );
@@ -353,40 +263,56 @@ export default async function LandingPage() {
             </p>
             <h2
               id="how-heading"
-              className="mx-auto mt-3 max-w-xl font-[family-name:var(--font-landing-display),Georgia,serif] text-4xl font-semibold leading-tight text-[#2C1A0E] md:text-5xl"
+              className="mx-auto mt-3 max-w-sm font-[family-name:var(--font-landing-display),Georgia,serif] text-4xl font-semibold leading-tight text-[#2C1A0E] md:text-5xl"
             >
-              Three steps to your calmer flow.
+              Three steps to a calmer flow.
             </h2>
           </ScrollReveal>
 
-          <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <div className="mt-16 grid grid-cols-1 gap-4 sm:grid-cols-3">
             {howItWorksSteps.map((step, i) => (
-              <ScrollReveal key={step.step} delay={i * 100}>
+              <ScrollReveal key={step.step} delay={i * 100} className="relative">
+                {/* connector arrow between cards */}
+                {i < howItWorksSteps.length - 1 && (
+                  <div className="absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 translate-x-1/2 sm:flex h-7 w-7 items-center justify-center rounded-full border border-[rgba(155,74,43,0.15)] bg-[#f5ece0] text-[#9B4A2B]/50">
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </div>
+                )}
                 <article
-                  className="flex flex-col gap-6 rounded-2xl border border-[rgba(155,74,43,0.1)] p-8"
+                  className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-[rgba(155,74,43,0.12)] p-7 shadow-[0_2px_16px_rgba(155,74,43,0.06)] transition-shadow hover:shadow-[0_8px_32px_rgba(155,74,43,0.12)]"
                   style={{ backgroundColor: step.cardBg }}
                 >
-                  <div className="flex items-center justify-between">
-                    <div
-                      className="flex h-11 w-11 items-center justify-center rounded-xl"
-                      style={{ backgroundColor: step.iconBg }}
-                    >
-                      <step.Icon className="h-5 w-5 text-white" aria-hidden="true" />
-                    </div>
-                    <span
-                      className="font-[family-name:var(--font-landing-sans)] text-xs font-bold tracking-widest text-[#9B4A2B]/40"
-                      aria-hidden="true"
-                    >
-                      {step.step}
-                    </span>
+                  {/* large ghost step number */}
+                  <span
+                    className="pointer-events-none absolute right-5 top-3 select-none font-[family-name:var(--font-landing-display),Georgia,serif] text-[80px] font-bold leading-none text-[#9B4A2B]/[0.07]"
+                    aria-hidden="true"
+                  >
+                    {step.step}
+                  </span>
+
+                  {/* icon */}
+                  <div
+                    className="flex h-12 w-12 items-center justify-center rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.18)]"
+                    style={{ backgroundColor: step.iconBg }}
+                  >
+                    <step.Icon className="h-5 w-5 text-white" aria-hidden="true" />
                   </div>
-                  <div>
+
+                  {/* text */}
+                  <div className="mt-6">
                     <h3 className="font-[family-name:var(--font-landing-display),Georgia,serif] text-2xl font-semibold text-[#2C1A0E]">
                       {step.title}
                     </h3>
-                    <p className="mt-2 font-[family-name:var(--font-landing-sans)] text-sm leading-relaxed text-[#5C3D2A]">
+                    <p className="mt-2.5 font-[family-name:var(--font-landing-sans)] text-sm leading-relaxed text-[#5C3D2A]/80">
                       {step.body}
                     </p>
+                  </div>
+
+                  {/* bottom accent line */}
+                  <div
+                    className="mt-auto pt-6"
+                  >
+                    <div className="h-px w-10 rounded-full opacity-30" style={{ backgroundColor: step.iconBg }} />
                   </div>
                 </article>
               </ScrollReveal>
