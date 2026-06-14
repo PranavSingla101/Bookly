@@ -9,11 +9,7 @@ interface AnnotationBody {
   payload?: unknown;
 }
 
-interface AnnotationPatchBody {
-  cfiRange?: unknown;
-  type?: unknown;
-  payload?: unknown;
-}
+type AnnotationPatchBody = AnnotationBody;
 
 interface ParseAnnotationCreateSuccess {
   ok: true;

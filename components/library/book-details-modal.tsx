@@ -9,12 +9,12 @@ import {
   Trash2Icon,
   XIcon,
 } from "lucide-react";
-import type { Book } from "@/store/useBookStore";
+import type { Book } from "@/types/books";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { formatBytes, formatDateTime } from "@/lib/format/bookUi";
-import { BooksApiError, updateBookMetadata } from "@/lib/books/api";
+import { BooksApiError, updateBookMetadata } from "@/lib/api/books/client";
 
 function MetaCell({ label, value }: { label: string; value: string }) {
   return (

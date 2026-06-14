@@ -1,7 +1,7 @@
 // Local-only EPUB parsing with Foliate (no network). Returns metadata + raw cover blob.
 
 import { assertValidEpubFileForUpload, EpubValidationError } from "../validateEpubFile";
-import type { EpubUploadMetadata } from "../types";
+import type { EpubUploadMetadata } from "@/types/epub";
 
 function pickDcText(value: unknown): string | undefined {
   if (value == null) return undefined;

@@ -5,23 +5,9 @@
  */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { Book } from '@/types/books';
 
-export interface Book {
-  id: string;
-  title: string;
-  author?: string;
-  coverData?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  /** Reading progress percentage [0, 100] from the server; omit when unknown. */
-  readingProgress?: number | null;
-  /** Latest EPUB CFI position for cross-device resume. */
-  readingCfi?: string | null;
-  /** Original upload size in bytes when stored. */
-  fileSize?: number | null;
-  fileName?: string | null;
-  mimeType?: string | null;
-}
+export type { Book } from '@/types/books';
 
 interface BookState {
   books: Book[];

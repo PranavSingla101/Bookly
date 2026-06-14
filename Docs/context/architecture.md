@@ -19,22 +19,26 @@
 - `app/api/` — All server-side logic. Route handlers own auth checks, input
   validation, Supabase queries, and Storage access. Nothing outside this boundary
   talks to Supabase directly.
-- `app/(auth)/` — Clerk-managed sign-in and sign-up pages. No application logic lives
-  here.
+- `app/sign-in/[[...sign-in]]/` and `app/sign-up/[[...sign-up]]/` — Clerk-managed
+  auth pages. No application logic lives here.
 - `app/library/` — Library page. A Server Component shell that renders the book grid.
   Delegates client interactivity (upload, delete, optimistic updates) to components.
-- `app/reader/[id]/` — Reader page. A Client Component that fetches the EPUB blob via
-  the API and mounts the Foliate-js iframe renderer. Owns CFI-based progress sync.
+- `app/library/[id]/read/` — Reader page. A Client Component that fetches the EPUB
+  blob via the API and mounts the Foliate-js iframe renderer. Owns CFI-based progress
+  sync.
 - `components/ui/` — shadcn/ui primitives. Managed by the shadcn CLI. Not hand-edited.
 - `components/library/` — Composed library UI (BookCard, UploadModal, EmptyState).
   No business logic — calls API routes or Zustand actions.
-- `components/reader/` — Composed reader UI (TOC sidebar, control strip, font size
-  picker). Communicates with the Foliate iframe via `postMessage` only.
+- `components/reader/` — *(planned, not yet created)* Will hold composed reader UI
+  (TOC sidebar, control strip, font size picker). Communicates with the Foliate iframe
+  via `postMessage` only.
 - `lib/` — Shared infrastructure. Supabase client factories, Clerk auth helpers, `cn()`
   utility. No UI, no route logic.
 - `store/` — Zustand stores. Client-only. Owns the in-memory book list and reader
   state. Persists book metadata to localStorage for instant render on page load.
-- `types/` — Shared TypeScript interfaces. No runtime logic.
+- `types/` — *(planned, not yet created)* Will hold shared TypeScript interfaces. No
+  runtime logic. Currently types are co-located in `lib/epub/types.ts` and inline in
+  route files.
 
 ---
 

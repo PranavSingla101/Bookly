@@ -90,21 +90,21 @@
   --sidebar-border: #d4d4d4;
   --sidebar-ring: #a1a1a1;
 
-  /* Custom app vars — light (white/grey) */
-  --lib-bg: #f5f5f7;
-  --lib-navbar-bg: #ffffff;
-  --lib-card-bg: #e8e8ec;
-  --lib-text-primary: #1a1a1a;
-  --lib-text-secondary: #6b6b6b;
-  --lib-text-muted: #9a9a9a;
-  --lib-border: #e0e0e0;
-  --lib-hover: rgba(0, 0, 0, 0.04);
-  --lib-separator: #d4d4d4;
-  --lib-add-card-bg: #eaeaee;
-  --lib-add-card-border: #d0d0d4;
-  --lib-search-bg: rgba(0, 0, 0, 0.04);
-  --lib-search-text: #1a1a1a;
-  --lib-search-placeholder: #8a8a8a;
+  /* App color tokens — light */
+  --color-bg: #f5f5f7;
+  --color-surface: #ffffff;
+  --color-card: #e8e8ec;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #6b6b6b;
+  --color-text-muted: #9a9a9a;
+  --color-border: #e0e0e0;
+  --color-hover: rgba(0, 0, 0, 0.04);
+  --color-separator: #d4d4d4;
+  --color-card-alt: #eaeaee;
+  --color-card-alt-border: #d0d0d4;
+  --color-input-bg: rgba(0, 0, 0, 0.04);
+  --color-input-text: #1a1a1a;
+  --color-input-placeholder: #8a8a8a;
 }
 
 /* ============================================================
@@ -146,21 +146,21 @@
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-ring: #666;
 
-  /* Custom app vars — dark (true zinc-950) */
-  --lib-bg: #09090b;
-  --lib-navbar-bg: #18181b;
-  --lib-card-bg: #1c1c20;
-  --lib-text-primary: #f4f4f5;
-  --lib-text-secondary: #a1a1aa;
-  --lib-text-muted: #71717a;
-  --lib-border: rgba(255, 255, 255, 0.1);
-  --lib-hover: rgba(255, 255, 255, 0.06);
-  --lib-separator: #3f3f46;
-  --lib-add-card-bg: #1c1c20;
-  --lib-add-card-border: rgba(255, 255, 255, 0.08);
-  --lib-search-bg: rgba(255, 255, 255, 0.05);
-  --lib-search-text: #f4f4f5;
-  --lib-search-placeholder: #71717a;
+  /* App color tokens — dark */
+  --color-bg: #09090b;
+  --color-surface: #18181b;
+  --color-card: #1c1c20;
+  --color-text-primary: #f4f4f5;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-hover: rgba(255, 255, 255, 0.06);
+  --color-separator: #3f3f46;
+  --color-card-alt: #1c1c20;
+  --color-card-alt-border: rgba(255, 255, 255, 0.08);
+  --color-input-bg: rgba(255, 255, 255, 0.05);
+  --color-input-text: #f4f4f5;
+  --color-input-placeholder: #71717a;
 }
 
 @layer base {
@@ -179,8 +179,8 @@
   min-height: 100vh;
   display: grid;
   place-items: center;
-  color: var(--lib-text-secondary);
-  background: var(--lib-bg);
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
 }
 
 /* Fills the viewport so the Foliate iframe gets a real height (avoids collapsed reader UI). */
@@ -264,17 +264,18 @@
   background:
     linear-gradient(
       to right,
-      rgba(14, 7, 2, 0.42) 0%,
-      rgba(14, 7, 2, 0.28) 30%,
-      rgba(14, 7, 2, 0.08) 56%,
-      transparent 76%
+      rgba(14, 7, 2, 0.72) 0%,
+      rgba(14, 7, 2, 0.50) 30%,
+      rgba(14, 7, 2, 0.18) 58%,
+      rgba(14, 7, 2, 0.06) 80%,
+      transparent 100%
     ),
     linear-gradient(
       to bottom,
-      rgba(14, 7, 2, 0.32) 0%,
-      transparent 20%,
-      transparent 70%,
-      rgba(14, 7, 2, 0.22) 100%
+      rgba(14, 7, 2, 0.38) 0%,
+      transparent 18%,
+      transparent 65%,
+      rgba(14, 7, 2, 0.32) 100%
     );
   animation: landing-glow 8s ease-in-out infinite;
 }
@@ -392,25 +393,25 @@
 .landing-hero {
   flex: 1;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 20rem;
+  align-items: center;
+  justify-content: flex-start;
+  padding-bottom: 2rem;
+  padding-top: 2rem;
 }
 
 .landing-panel {
   width: 100%;
-  max-width: 36rem;
+  max-width: 34rem;
   padding: 1.6rem 1.75rem;
   color: var(--landing-panel-ink);
   border-radius: 1.25rem;
-  background: rgba(16, 8, 3, 0.38);
+  background: rgba(16, 8, 3, 0.42);
   backdrop-filter: blur(22px) saturate(1.6) brightness(1.05);
   -webkit-backdrop-filter: blur(22px) saturate(1.6) brightness(1.05);
   border: 1px solid rgba(255, 210, 155, 0.14);
   box-shadow:
     inset 0 1px 0 rgba(255, 220, 170, 0.1),
     0 8px 32px rgba(8, 4, 1, 0.28);
-  transform: translateX(-5rem);
   animation: landing-rise 560ms cubic-bezier(0.22, 0.72, 0.2, 1) both;
   animation-delay: 120ms;
 }
@@ -527,7 +528,7 @@
   }
 
   .landing-heroStage {
-    padding: 1.5rem 1.5rem 7rem;
+    padding: 1.5rem 1.5rem 3rem;
   }
 
   .landing-content {
@@ -576,6 +577,27 @@
 /* ============================================================
    AUTH PAGE TRANSITION
    ============================================================ */
+.auth-brand-link {
+  transition: opacity 150ms ease;
+}
+
+.auth-brand-link:hover {
+  opacity: 0.85;
+}
+
+.auth-back-link {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(255, 228, 190, 0.45);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.auth-back-link:hover {
+  color: rgba(255, 240, 210, 0.85);
+}
+
 @keyframes auth-page-in {
   from {
     opacity: 0;

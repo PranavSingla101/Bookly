@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Settings, LogOut, Sun, Moon } from "lucide-react";
-import { useThemeStore } from "@/store/useThemeStore";
+import { useThemeStore } from "@/store";
 
 export function UserSettingsDropdown() {
   const [open, setOpen] = useState(false);
@@ -43,7 +43,7 @@ export function UserSettingsDropdown() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="flex h-9 w-9 items-center justify-center rounded-full transition-colors"
-        style={{ color: "var(--lib-text-secondary)" }}
+        style={{ color: "var(--color-text-secondary)" }}
         title="Settings"
         aria-label="Settings menu"
         aria-haspopup="true"
@@ -56,25 +56,25 @@ export function UserSettingsDropdown() {
         <div
           className="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-xl border shadow-xl backdrop-blur-md"
           style={{
-            borderColor: "var(--lib-border)",
-            background: "var(--lib-navbar-bg)",
+            borderColor: "var(--color-border)",
+            background: "var(--color-surface)",
           }}
         >
           {user && (
             <div
               className="border-b px-4 py-3"
-              style={{ borderColor: "var(--lib-border)" }}
+              style={{ borderColor: "var(--color-border)" }}
             >
               <p
                 className="truncate text-sm font-medium"
-                style={{ color: "var(--lib-text-primary)" }}
+                style={{ color: "var(--color-text-primary)" }}
               >
                 {user.fullName || user.primaryEmailAddress?.emailAddress}
               </p>
               {user.fullName && user.primaryEmailAddress?.emailAddress && (
                 <p
                   className="truncate text-xs"
-                  style={{ color: "var(--lib-text-muted)" }}
+                  style={{ color: "var(--color-text-muted)" }}
                 >
                   {user.primaryEmailAddress.emailAddress}
                 </p>
@@ -86,7 +86,7 @@ export function UserSettingsDropdown() {
             type="button"
             onClick={toggleTheme}
             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors"
-            style={{ color: "var(--lib-text-secondary)" }}
+            style={{ color: "var(--color-text-secondary)" }}
           >
             {theme === "dark" ? (
               <Sun className="h-4 w-4" />
@@ -96,7 +96,7 @@ export function UserSettingsDropdown() {
             <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
           </button>
 
-          <div style={{ borderTop: "1px solid var(--lib-border)" }} />
+          <div style={{ borderTop: "1px solid var(--color-border)" }} />
 
           <button
             type="button"

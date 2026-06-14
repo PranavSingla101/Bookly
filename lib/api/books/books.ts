@@ -10,7 +10,7 @@ export async function fetchOwnedBook(
   bookId: string,
   profileId: string,
   select = "*"
-): Promise<{ data: any; error: any }> {
+): Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }> {
   const { data, error } = await supabase
     .from("books")
     .select(select)

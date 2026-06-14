@@ -10,6 +10,32 @@ Active fix: continuous-scroll highlights still persisted as an issue despite old
 
 ## Completed
 
+- **Search Bar `/` Shortcut Badge** (`components/layout/navbar.tsx`) (June 2026):
+  - Added a `[/]` keyboard shortcut `<kbd>` badge inside the right side of the search input, matching the design in `Docs/screenshots/Search-bar-UI.png`.
+  - Wired a global `keydown` listener: pressing `/` outside an input/textarea focuses the search field; `Escape` blurs it.
+  - Adjusted input right padding (`pr-10`) to prevent text overlap with the badge.
+
+- **Semantic CFI Highlight Redraw Hardening** (`packages/foliate-js/reader.js`, `packages/foliate-js/overlayer.js`) (May 2026):
+  - Re-centered continuous-scroll highlight creation around semantic CFIs: newly selected highlights now store the temp annotation by CFI first and render by resolving that CFI back into a fresh range, rather than treating the live selection geometry as source of truth.
+  - Consolidated annotation view listeners into the idempotent `#initAnnotationViewListeners()` path to avoid duplicate `draw-annotation` / `show-annotation` handlers after the earlier reader-ready timing fix.
+  - Improved continuous-scroll layout settling by debouncing chapter layout rerenders, waiting for `document.fonts.ready`, waiting for pending image load/error completion, and then running a double-RAF CFI-based redraw.
+  - Hardened iframe and overlay sizing with max document/body scroll and offset dimensions, so body-mounted overlays match the real chapter height after images, font changes, and reflows.
+  - Updated `Overlayer` to filter zero-area rects and translate client rects using window, documentElement, or body scroll offsets before drawing and hit-testing in document-space coordinates.
+  - Verified with `npm.cmd run build` after allowing Google Fonts fetch.
+
+- **Reader Ready Signal Timing Fix** (`app/library/[id]/read/page.tsx`, `packages/foliate-js/reader.js`) (May 2026):
+  - Fixed the opening overlay failsafe warning by moving `bookly:reader-ready` to fire immediately after reader restore/init and annotation listener registration, before slower sidebar metadata/cover/Calibre work.
+  - Added an idempotent reader-ready notifier so later code paths cannot send duplicate readiness messages.
+  - Increased the parent overlay safety timeout from 6 seconds to 20 seconds to account for deep continuous-scroll CFI restores that must load multiple chapter iframes.
+  - Verified with `npm.cmd run build` after allowing the build to fetch Google Fonts.
+
+- **Continuous Scroll Highlight Hydration Reliability Fix** (`app/library/[id]/read/page.tsx`, `packages/foliate-js/reader.js`) (May 2026):
+  - Fixed a persistent reopen failure mode where an initial annotations API error was converted into an authoritative empty cache, causing the reader to hydrate with no highlights and skip the later retry path.
+  - Changed the reader wrapper to cache annotation results only after a successful fetch; failed early fetches now leave the cache empty so `bookly:reader-ready` refetches from `/api/books/:id/annotations`.
+  - Added repeated annotation hydration posts after `bookly:reader-ready` to cover iframe listener/chapter-load timing in continuous scroll mode.
+  - Added a continuous-scroll replay pass that schedules highlight rerenders across all currently loaded chapter overlays after server annotations are received.
+  - Verified with `npm.cmd run build` after allowing the build to fetch Google Fonts.
+
 - **Absolute Coordinates & Body-Context Highlight Mounting** (`packages/foliate-js/overlayer.js`, `packages/foliate-js/reader.js`) (May 2026):
   - Solved coordinate-space mismatch bugs between `getClientRects()` viewport-relative coordinates and absolute SVG overlays inside stacked continuous-scroll iframes.
   - Implemented automatic scrollX / scrollY translation inside Overlayer's `add`, `redraw`, and `hitTest` methods to map all rects to absolute document coordinates.

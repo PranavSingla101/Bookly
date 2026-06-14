@@ -52,14 +52,13 @@ export async function GET(_request: Request, props: RouteContext<"/api/books/[id
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
     }
 
-    const r = row as Record<string, unknown>;
     const epubPath =
-      typeof r.epub_storage_path === "string" ? r.epub_storage_path.trim() : "";
+      typeof row.epub_storage_path === "string" ? row.epub_storage_path.trim() : "";
     if (epubPath) {
       return NextResponse.json({ url: `/api/books/${id}/epub` });
     }
 
-    const url = buildBookOpfAssetUrl(id, r);
+    const url = buildBookOpfAssetUrl(id, row);
     if (!url) {
       return NextResponse.json({ error: "Book reader entry is unavailable" }, { status: 400 });
     }

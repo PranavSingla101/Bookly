@@ -104,3 +104,15 @@
 2026-05-24T17:31:42.875Z GET /api/books success count=1
 2026-05-24T17:31:44.918Z GET /api/books profile=bf5fe41d-313f-4089-be9e-0b842ddb358e
 2026-05-24T17:31:44.990Z GET /api/books success count=1
+2026-06-14T09:12:38.763Z GET /api/books profile_resolution_failed
+2026-06-14T09:13:01.932Z GET /api/books profile_resolution_failed
+2026-06-14T09:23:52.426Z GET /api/books profile=bf5fe41d-313f-4089-be9e-0b842ddb358e
+2026-06-14T09:23:52.575Z GET /api/books success count=1
+2026-06-14T09:27:43.850Z GET /api/books profile=bf5fe41d-313f-4089-be9e-0b842ddb358e
+2026-06-14T09:27:43.976Z GET /api/books success count=1
+2026-06-14T09:33:28.950Z GET /api/books profile=bf5fe41d-313f-4089-be9e-0b842ddb358e
+2026-06-14T09:33:29.115Z GET /api/books success count=1
+2026-06-14T09:33:40.894Z GET /api/books profile=bf5fe41d-313f-4089-be9e-0b842ddb358e
+2026-06-14T09:33:41.062Z GET /api/books success count=1
+2026-06-14T09:33:49.782Z GET /api/books profile=bf5fe41d-313f-4089-be9e-0b842ddb358e
+2026-06-14T09:33:49.903Z GET /api/books success count=1

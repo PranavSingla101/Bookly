@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Plus } from "lucide-react";
 
@@ -17,7 +17,7 @@ export function AddBookCard({ onClick, disabled }: AddBookCardProps) {
       aria-label="Add a new book"
       aria-busy={disabled ? true : undefined}
       className="group flex aspect-[2/3] w-full flex-col items-center justify-center rounded-xl border-2 border-dashed bg-transparent transition-all disabled:pointer-events-none disabled:opacity-40"
-      style={{ borderColor: 'var(--lib-add-card-border)', color: 'var(--lib-text-muted)' }}
+      style={{ borderColor: 'var(--color-card-alt-border)', color: 'var(--color-text-muted)' }}
     >
       <Plus className="h-8 w-8 stroke-[1.5] transition-colors" />
     </button>

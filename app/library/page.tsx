@@ -1,4 +1,4 @@
-/**
+﻿/**
  * This page shows the user's cloud library grid and manages core book actions:
  * initial fetch, EPUB upload, and book removal. It hydrates the Zustand store
  * from API data and renders the library card interface.
@@ -6,7 +6,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useBookStore } from "@/store/useBookStore";
+import { useBookStore } from "@/store";
 import { BookCard } from "@/components/library/book-card";
 import { AddBookCard } from "@/components/library/add-book-card";
 import { Navbar } from "@/components/layout/navbar";
@@ -21,9 +21,12 @@ import {
   fetchBooks,
   isAbortError,
   uploadBook,
-} from "@/lib/books/api";
+} from "@/lib/api/books/client";
 
 type UploadPhase = "idle" | "extracting" | "compressing_cover" | "uploading";
+
+/** Vercel free-tier enforces a 4 MB request body limit. */
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 
 export default function LibraryPage() {
   const books = useBookStore((state) => state.books);
@@ -47,8 +50,9 @@ export default function LibraryPage() {
   useEffect(() => {
     let cancelled = false;
 
-    void fetchBooks()
-      .then(({ books: cloudBooks }) => {
+    const loadBooks = async () => {
+      try {
+        const { books: cloudBooks } = await fetchBooks();
         if (cancelled) return;
         // Sort by most recently read/updated — books touched by progress sync float to top
         const sorted = [...cloudBooks].sort((a, b) => {
@@ -57,21 +61,18 @@ export default function LibraryPage() {
           return tb - ta;
         });
         setBooks(sorted);
-      })
-      .catch((error) => {
+      } catch (error) {
         if (error instanceof BooksApiError && error.status === 401) {
-          if (!cancelled) {
-            setBooks([]);
-          }
+          if (!cancelled) setBooks([]);
           return;
         }
         console.error("Failed to hydrate cloud library:", error);
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      });
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+
+    void loadBooks();
 
     return () => {
       cancelled = true;
@@ -109,8 +110,6 @@ export default function LibraryPage() {
   const handleCancelUpload = useCallback(() => {
     uploadAbortRef.current?.abort();
   }, []);
-
-  const MAX_UPLOAD_BYTES = 4 * 1024 * 1024; // 4 MB — Vercel free-tier body limit
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -209,7 +208,7 @@ export default function LibraryPage() {
           : null;
 
   return (
-    <div className="min-h-screen transition-colors" style={{ background: 'var(--lib-bg)', color: 'var(--lib-text-primary)' }}>
+    <div className="min-h-screen transition-colors" style={{ background: 'var(--color-bg)', color: 'var(--color-text-primary)' }}>
       <input
         type="file"
         accept=".epub,application/epub+zip"
@@ -231,13 +230,13 @@ export default function LibraryPage() {
           </div>
         ) : null}
         {uploadPhase !== "idle" ? (
-          <div className="mb-6 flex flex-wrap items-center gap-4 text-sm" style={{ color: 'var(--lib-text-secondary)' }} aria-live="polite">
+          <div className="mb-6 flex flex-wrap items-center gap-4 text-sm" style={{ color: 'var(--color-text-secondary)' }} aria-live="polite">
             {coverPreviewUrl ? (
               <img
                 src={coverPreviewUrl}
                 alt=""
                 className="h-14 w-10 shrink-0 rounded border object-cover"
-                style={{ borderColor: 'var(--lib-border)' }}
+                style={{ borderColor: 'var(--color-border)' }}
               />
             ) : null}
             <span className="min-w-0 flex-1">{uploadStatusLabel}</span>
@@ -246,7 +245,7 @@ export default function LibraryPage() {
                 type="button"
                 onClick={handleCancelUpload}
                 className="shrink-0 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors"
-                style={{ borderColor: 'var(--lib-border)', background: 'var(--lib-card-bg)', color: 'var(--lib-text-primary)' }}
+                style={{ borderColor: 'var(--color-border)', background: 'var(--color-card)', color: 'var(--color-text-primary)' }}
               >
                 Cancel upload
               </button>
@@ -255,7 +254,7 @@ export default function LibraryPage() {
         ) : null}
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {isLoading && books.length === 0 ? (
-            <div className="col-span-full text-sm" style={{ color: 'var(--lib-text-muted)' }}>Loading your library…</div>
+            <div className="col-span-full text-sm" style={{ color: 'var(--color-text-muted)' }}>Loading your library…</div>
           ) : null}
           {books.map((book) => (
             <BookCard

@@ -9,8 +9,12 @@ import { BOOKS_BUCKET, COVERS_BUCKET, EPUBS_BUCKET } from "@/lib/api/books/const
 import { handleCommonApiError } from "@/lib/api/books/errors";
 import { fetchOwnedBook } from "@/lib/api/books/books";
 import { parseProgressJsonBody } from "@/lib/api/books/progress";
-import { mapDbBookToBookDto } from "@/lib/books/dto";
-import { removeStorageFolderPrefix } from "@/lib/supabase/storageTree";
+import { mapDbBookToBookDto } from "@/lib/api/books/dto";
+import { removeStorageFolderPrefix } from "@/lib/supabase";
+
+function trimmedStringOrEmpty(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
 
 export async function GET(_request: Request, props: RouteContext<"/api/books/[id]">) {
   try {
@@ -50,26 +54,17 @@ export async function DELETE(_request: Request, props: RouteContext<"/api/books/
       return NextResponse.json({ error: "Failed to delete book" }, { status: 500 });
     }
 
-    const epubPath =
-      typeof existing.epub_storage_path === "string"
-        ? existing.epub_storage_path.trim()
-        : "";
+    const epubPath = trimmedStringOrEmpty(existing.epub_storage_path);
     if (epubPath) {
       await supabase.storage.from(EPUBS_BUCKET).remove([epubPath]);
     }
 
-    const coverPath =
-      typeof existing.cover_storage_path === "string"
-        ? existing.cover_storage_path.trim()
-        : "";
+    const coverPath = trimmedStringOrEmpty(existing.cover_storage_path);
     if (coverPath) {
       await supabase.storage.from(COVERS_BUCKET).remove([coverPath]);
     }
 
-    const prefix =
-      typeof existing.extracted_storage_prefix === "string"
-        ? existing.extracted_storage_prefix.trim()
-        : "";
+    const prefix = trimmedStringOrEmpty(existing.extracted_storage_prefix);
 
     if (prefix) {
       await removeStorageFolderPrefix(supabase, BOOKS_BUCKET, prefix);

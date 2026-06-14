@@ -59,7 +59,7 @@
 - Do not store generated or derived data (cover blobs, EPUB content) directly in the
   database — Supabase Storage holds the files; the database holds only path references.
 - Three storage buckets are in use: `epubs`, `covers`, `books` (legacy). Do not create
-  additional buckets without updating `architecture-context.md`.
+  additional buckets without updating `Docs/context/architecture.md`.
 - Handle `409 Conflict` responses from progress sync gracefully on the client — they
   are expected under last-write-wins semantics.
 
@@ -95,19 +95,22 @@
 
 ```
 app/
-  (auth)/         — Clerk sign-in / sign-up pages
+  sign-in/        — Clerk sign-in page (no app logic)
+  sign-up/        — Clerk sign-up page (no app logic)
   api/            — Route handlers (one file per resource operation)
   library/        — Library page (Server Component shell)
-  reader/[id]/    — Reader page (Client Component for Foliate iframe)
+  library/[id]/read/ — Reader page (Client Component for Foliate iframe)
 components/
   ui/             — shadcn/ui primitives (added via CLI only)
   library/        — Library-specific composed components
-  reader/         — Reader-specific composed components
+  reader/         — Reader-specific composed components (planned)
 lib/
   supabase/       — Supabase client factories (server + client)
+  epub/           — EPUB extraction, validation, zip utilities
+  api/books/      — Book API helpers (annotations, progress, errors)
   utils.ts        — cn() and other shared utilities
 store/            — Zustand stores
-types/            — Shared TypeScript interfaces and types
+types/            — Shared TypeScript interfaces and types (planned)
 ```
 
 - `components/ui/` is managed by the shadcn CLI — do not hand-edit generated

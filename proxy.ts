@@ -1,24 +1,23 @@
-/**
- * This proxy file protects private routes with Clerk auth checks while
- * excluding static assets and framework internals through matcher patterns.
- * It is the gatekeeper for the `/library` area.
- */
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const isProtectedRoute = createRouteMatcher(["/library(.*)", "/api/books(.*)"]);
+const isProtectedRoute = createRouteMatcher([
+  "/library(.*)",
+  "/api/books(.*)",
+]);
 
-export default clerkMiddleware(
-  async (auth, req) => {
-    if (isProtectedRoute(req)) {
-      await auth.protect();
-    }
-  },
-  { clockSkewInMs: 30000 },
-);
+export default clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) {
+    await auth.protect();
+  }
+});
 
 export const config = {
   matcher: [
+    // Skip Next.js internals and all static files unless in search params
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Always run for API routes
     "/(api|trpc)(.*)",
+    // Always run for Clerk's own frontend API routes
+    "/__clerk/(.*)",
   ],
 };

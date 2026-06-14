@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireUserProfile } from "@/lib/auth/requireUserProfile";
 import { COVERS_BUCKET, EPUBS_BUCKET } from "@/lib/api/books/constants";
-import { mapDbBookToBookDto } from "@/lib/books/dto";
-import { ensureBookStorageBuckets } from "@/lib/supabase/ensureBookBuckets";
-import { isPkZipMagic } from "@/lib/epub/epubZipMagic";
+import { mapDbBookToBookDto } from "@/lib/api/books/dto";
+import { ensureBookStorageBuckets } from "@/lib/supabase";
+import { isPkZipMagic } from "@/lib/epub";
 import { parseMultipart } from "@/lib/http/parseMultipart";
 import type { SupabaseClient } from "@supabase/supabase-js";
 

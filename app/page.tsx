@@ -8,6 +8,7 @@ import {
   RefreshCw,
   PenLine,
   ArrowRight,
+  Moon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -187,7 +188,7 @@ export default async function LandingPage() {
           ================================================================ */}
       <section className="landing-heroStage">
         <Image
-          src="/landing_page_bg.png"
+          src="/Landing_Page_Background_Updated.png"
           alt=""
           fill
           priority
@@ -206,6 +207,7 @@ export default async function LandingPage() {
                 width={32}
                 height={32}
                 className="landing-brandMark"
+                style={{ width: 32, height: 32 }}
                 priority
               />
               <span className="landing-brandWord">Bookly</span>
@@ -226,11 +228,11 @@ export default async function LandingPage() {
             <div className="landing-panel">
               <p className="landing-kicker-serif">A quiet home for your books</p>
               <h1 id="hero-heading" className="landing-title">
-                Read in a calmer flow, every day.
+                Your reading sanctuary.
               </h1>
               <p className="landing-summary">
-                Keep your shelf organised, continue from your last page, and save highlights
-                without losing focus. Bookly stays warm, simple, and intentionally minimal.
+                Continue where you left off, organise your books, save highlights, and stay
+                immersed — without distractions.
               </p>
 
               <div className="landing-ctaRow">
@@ -238,10 +240,64 @@ export default async function LandingPage() {
                   <Link href="/sign-in">Start Reading</Link>
                 </Button>
                 <Button asChild size="lg" className="landing-ctaSecondary">
-                  <Link href="/library">Open Library</Link>
+                  <Link href="/sign-in">Explore Library</Link>
                 </Button>
               </div>
 
+              {/* Feature badges */}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {[
+                  { Icon: BookOpen, label: "Organised Library" },
+                  { Icon: PenLine, label: "Save Highlights" },
+                  { Icon: Moon, label: "Dark Mode" },
+                ].map(({ Icon, label }) => (
+                  <div
+                    key={label}
+                    className="flex items-center gap-1.5 rounded-full border border-[rgba(255,210,155,0.18)] bg-[rgba(16,8,3,0.45)] px-3 py-1.5 backdrop-blur-md"
+                  >
+                    <Icon className="h-3.5 w-3.5 text-[rgba(255,218,165,0.85)]" aria-hidden="true" />
+                    <span className="font-[family-name:var(--font-landing-sans)] text-xs font-semibold text-[rgba(255,228,190,0.85)]">
+                      {label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Social proof */}
+              <div className="mt-5 flex items-center gap-3">
+                <div className="flex -space-x-2">
+                  {[
+                    { src: "/Pranav-user1.png", alt: "Reader" },
+                    { src: "/User2.png", alt: "Reader" },
+                    { src: "/User3.png", alt: "Reader" },
+                  ].map(({ src, alt }, i) => (
+                    <div
+                      key={i}
+                      className="h-8 w-8 rounded-full border-2 border-[rgba(255,220,165,0.3)] overflow-hidden"
+                      style={{ width: 32, height: 32 }}
+                    >
+                      <Image
+                        src={src}
+                        alt={alt}
+                        width={32}
+                        height={32}
+                        className="object-cover w-full h-full"
+                        style={{ width: 32, height: 32 }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <div className="flex items-center gap-0.5" aria-label="5 stars">
+                    {[...Array(5)].map((_, i) => (
+                      <span key={i} className="text-[#C4763A] text-xs leading-none">★</span>
+                    ))}
+                  </div>
+                  <p className="font-[family-name:var(--font-landing-sans)] text-xs text-[rgba(255,228,190,0.7)] mt-0.5">
+                    Loved by 10,000+ readers
+                  </p>
+                </div>
+              </div>
             </div>
           </section>
         </div>
@@ -274,7 +330,7 @@ export default async function LandingPage() {
               <ScrollReveal key={step.step} delay={i * 100} className="relative">
                 {/* connector arrow between cards */}
                 {i < howItWorksSteps.length - 1 && (
-                  <div className="absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 translate-x-1/2 sm:flex h-7 w-7 items-center justify-center rounded-full border border-[rgba(155,74,43,0.15)] bg-[#f5ece0] text-[#9B4A2B]/50">
+                  <div className="absolute -right-2 top-1/2 z-10 hidden -translate-y-1/2 translate-x-1/2 sm:flex h-8 w-8 items-center justify-center rounded-full border border-[rgba(155,74,43,0.35)] bg-[#ecd8c6] text-[#9B4A2B] shadow-sm">
                     <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </div>
                 )}

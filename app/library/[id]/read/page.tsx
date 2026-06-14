@@ -16,7 +16,8 @@ import {
   createBookAnnotation,
   updateBookAnnotation,
   deleteBookAnnotation,
-} from "@/lib/books/api";
+} from "@/lib/api/books/client";
+import type { BookAnnotation } from "@/types/books";
 
 export default function BookReaderPage() {
   const params = useParams<{ id: string }>();
@@ -30,13 +31,14 @@ export default function BookReaderPage() {
   const [isSavingAndClosing, setIsSavingAndClosing] = useState(false);
   const [isOpeningAndRestoring, setIsOpeningAndRestoring] = useState(true);
 
-  // Safety timeout: automatically dismiss the opening overlay after 6 seconds to prevent get-stuck scenarios
+  // Safety timeout: continuous-scroll restores can load many chapter iframes
+  // before landing on a saved CFI, so keep this comfortably above normal load.
   useEffect(() => {
     if (!isOpeningAndRestoring) return;
     const timer = setTimeout(() => {
       console.warn("[reader] Opening overlay safety timeout reached, forcing dismissal");
       setIsOpeningAndRestoring(false);
-    }, 6000);
+    }, 20000);
     return () => clearTimeout(timer);
   }, [isOpeningAndRestoring]);
 
@@ -45,22 +47,29 @@ export default function BookReaderPage() {
   const lastSyncedCfiRef = useRef<string | null>(null);
   /** Dismiss timer for the restore-error toast. */
   const restoreErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cachedAnnotationsRef = useRef<import("@/lib/books/api").BookAnnotation[] | null>(null);
+  const cachedAnnotationsRef = useRef<BookAnnotation[] | null>(null);
 
   // ─── Fetch book data + reader entry in parallel ────────────────────────────
   useEffect(() => {
     if (!bookId) return;
     let cancelled = false;
 
-    // Graceful fallback: annotations failure doesn't kill the reader
-    const safeAnnotations = fetchBookAnnotations(bookId).catch(() => ({ annotations: [] }));
+    // Graceful fallback: annotations failure doesn't kill the reader, but don't
+    // cache an empty list as authoritative if the request itself failed.
+    const safeAnnotations = fetchBookAnnotations(bookId)
+      .then((result) => ({ ok: true as const, annotations: result.annotations }))
+      .catch((error) => {
+        console.warn("[book reader] initial annotations fetch failed", error);
+        return { ok: false as const, annotations: [] };
+      });
 
     void Promise.all([fetchBookReaderEntry(bookId), fetchBook(bookId), safeAnnotations])
       .then(([readerResult, bookResult, annotationsResult]) => {
         if (cancelled) return;
 
-        // Cache for reuse in handleIframeLoad — avoids a second fetch
-        cachedAnnotationsRef.current = annotationsResult.annotations;
+        // Cache for reuse in handleIframeLoad only when the request succeeded.
+        // If it failed, reader-ready will retry instead of hydrating an empty set.
+        cachedAnnotationsRef.current = annotationsResult.ok ? annotationsResult.annotations : null;
 
         // Pick resume CFI: most recent bookmark > last read position > null
         const mostRecentBookmark = annotationsResult.annotations
@@ -156,7 +165,9 @@ export default function BookReaderPage() {
 
       // Iframe reader is fully ready to render annotations
       if (data.type === "bookly:reader-ready") {
-        handleIframeLoad();
+        void handleIframeLoad();
+        window.setTimeout(() => void handleIframeLoad(), 250);
+        window.setTimeout(() => void handleIframeLoad(), 1000);
         setIsOpeningAndRestoring(false);
         return;
       }
