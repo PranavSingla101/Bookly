@@ -4,13 +4,14 @@
  * API routes that operate on individual books.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { DbBookRow } from "./dto";
 
 export async function fetchOwnedBook(
   supabase: SupabaseClient,
   bookId: string,
   profileId: string,
   select = "*"
-): Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }> {
+): Promise<{ data: DbBookRow | null; error: { message: string } | null }> {
   const { data, error } = await supabase
     .from("books")
     .select(select)
@@ -18,5 +19,5 @@ export async function fetchOwnedBook(
     .eq("profile_id", profileId)
     .single();
 
-  return { data, error };
+  return { data: data as DbBookRow | null, error };
 }

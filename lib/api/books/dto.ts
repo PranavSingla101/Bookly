@@ -7,6 +7,7 @@ import type { Book } from "@/types/books";
 
 /** Row shape from `books` (works with `select("*")` before/after optional columns are migrated). */
 export interface DbBookRow {
+  [key: string]: unknown;
   id: string;
   title: string;
   author: string | null;
@@ -14,6 +15,7 @@ export interface DbBookRow {
   created_at: string;
   updated_at: string;
   storage_path?: string | null;
+  extracted_storage_prefix?: string | null;
   package_opf_storage_path?: string | null;
   /** Path inside `epubs` bucket when using raw-EPUB reader mode. */
   epub_storage_path?: string | null;
