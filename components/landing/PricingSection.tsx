@@ -149,6 +149,9 @@ export function PricingSection() {
             >
               Start Pro free trial
             </Link>
+            <p className="mt-3 rounded-full border border-[#9B4A2B]/20 bg-[#9B4A2B]/5 px-4 py-1.5 text-center font-[family-name:var(--font-landing-sans)] text-xs font-medium text-[#9B4A2B]">
+              Currently available for free (beta)
+            </p>
             <ul className="mt-8 space-y-3">
               {PRO_FEATURES.map((f) => (
                 <li

@@ -236,15 +236,22 @@ export default function BookReaderPage() {
 
       // Bookmark update
       if (data.type === "bookly:bookmark-update") {
-        const { id, payload } = data as {
+        const { id, payload, cfiRange } = data as {
           id: string;
           payload: Record<string, unknown>;
+          cfiRange?: string;
         };
-        updateBookAnnotation(bookId, id, payload, true)
+        updateBookAnnotation(bookId, id, payload, true, cfiRange)
           .then(() => {
             if (cachedAnnotationsRef.current) {
               cachedAnnotationsRef.current = cachedAnnotationsRef.current.map((a) =>
-                a.id === id ? { ...a, payload: { ...a.payload, ...payload } } : a
+                a.id === id
+                  ? {
+                      ...a,
+                      payload: { ...a.payload, ...payload },
+                      ...(cfiRange ? { cfi_range: cfiRange } : {}),
+                    }
+                  : a
               );
             }
           })

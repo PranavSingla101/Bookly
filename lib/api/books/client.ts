@@ -235,16 +235,17 @@ export async function updateBookAnnotation(
   bookId: string,
   annotationId: string,
   payload: Record<string, unknown>,
-  keepalive?: boolean
+  keepalive?: boolean,
+  cfiRange?: string
 ): Promise<void> {
+  const body: Record<string, unknown> = { payload };
+  if (cfiRange) body.cfiRange = cfiRange;
   const response = await fetch(`/api/books/${bookId}/annotations/${annotationId}`, {
     method: "PATCH",
     headers: {
       "content-type": "application/json",
     },
-    body: JSON.stringify({
-      payload,
-    }),
+    body: JSON.stringify(body),
     keepalive,
   });
   if (!response.ok) {

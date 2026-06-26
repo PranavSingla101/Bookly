@@ -3,12 +3,65 @@
 Update this file after every meaningful implementation change.
 
 ## Current Phase
-Maintenance / reader stability
+Pre-launch / deployment readiness
 
 ## Current Goal
-Active fix: continuous-scroll highlights still persisted as an issue despite older logs. Current work focuses on rebuilding highlight overlays from CFI after layout settles; previous highlight-fix logs are historical only.
+Preparing for beta launch. Pricing section updated with "currently available for free (beta)" banner. Build type error in `fetchOwnedBook` return type needs fixing.
 
 ## Completed
+
+- **Single Toggle Bookmark** (`packages/foliate-js/reader.html`, `packages/foliate-js/reader-bookmarks.js`, `packages/foliate-js/reader-annotations.js`, `packages/foliate-js/reader.js`) (June 2026):
+  - Converted the bookmark system from multi-bookmark to a single toggle per book.
+  - Bookmark button now reflects state: outline icon when no bookmark exists, filled icon (`bookmark-active` class) when active.
+  - Clicking the bookmark button toggles between creating and removing the bookmark. Strip still renders, supports drag-to-reposition, and persists to database.
+  - Added `hasBookmark` getter, `getExistingBookmark()`, `removeBookmark()`, and `onBookmarkRemoved` callback to `BookmarkController`.
+  - Added `#updateBookmarkButtonState(active)` method to `Reader` class, called after load, save, toggle, and trash-icon deletion.
+  - `reader-annotations.js` now skips non-first bookmarks in `bookly:load-annotations` handler (only most recent bookmark is loaded).
+  - Handled delete-during-temp-ID race condition via `#pendingCreateCfi` and `#deleteOnSave` flags in `BookmarkController`.
+  - No database, API, or postMessage changes needed. Old multi-bookmark rows persist harmlessly.
+  - Spec: `Docs/feature-specs/09-bookmark-toggle.md`.
+
+- **Draggable Bookmark Strips in Paginated/Scrolled Modes** (`packages/foliate-js/`, `lib/api/books/client.ts`, `app/library/[id]/read/page.tsx`) (June 2026):
+  - Bookmark strips in paginated and scrolled modes were static (`cursor: default`, no drag listeners). Users could not reposition them.
+  - Enabled drag in paginator modes: strips now have `cursor: grab`, a drag grip icon, and vertical drag constrained to the content iframe's bounding rect via `#getContentColumnRect()`.
+  - On drop, the new Y position is resolved to a position-specific CFI using `#resolveDropPositionToCfi(clientY)` — uses `caretRangeFromPoint` / `caretPositionFromPoint` / `elementFromPoint` fallback chain on the content document, then `view.getCFI(index, range)`.
+  - The strip's stored `cfi` is updated in `#bookmarkStrips` map and repositioned via `#positionPaginatorBookmarkStrip` to snap to the new CFI's bounding rect.
+  - Extended `bookly:bookmark-update` postMessage to carry an optional `cfiRange` field alongside `payload`.
+  - Extended `updateBookAnnotation` client helper with an optional `cfiRange` parameter that sends `cfiRange` in the PATCH body.
+  - Updated `page.tsx` handler to pass `cfiRange` through and update the cached annotation's `cfi_range` on success.
+  - Backend already supported `cfiRange` in PATCH — `parseAnnotationPatchInput` maps `body.cfiRange` to `update.cfi_range` (no backend changes needed).
+  - If CFI resolution fails on drop, the strip snaps back to its original CFI position (graceful fallback).
+  - Spec: Bug 1.2 in `Docs/feature-specs/08-Fixing-Bookmarks.md`.
+
+- **Content-Edge Bookmark Strip Positioning in Paginated/Scrolled Modes** (`packages/foliate-js/`) (June 2026):
+  - Fixed bookmark strips rendering at the viewport's right edge (`right: 0`) instead of the content column's right edge. In book mode with dark margins, strips floated in the margin area, visually disconnected from text.
+  - Added `#getContentColumnRect()` helper that retrieves the content iframe's bounding rect via `renderer.getContents()[0].doc.defaultView.frameElement.getBoundingClientRect()` — the iframe IS the content column inside the paginator's closed shadow DOM.
+  - Added `#getContentRightOffset()` helper that computes `mountRect.right - iframeRect.right` using `els.foliatMount` as the reference frame. Avoids `window.innerWidth` which breaks with scrollbars, embedded readers, and mobile viewports.
+  - Updated `renderBookmarkStrip` to set initial `right: ${offset}px` from the content edge.
+  - Updated `#positionPaginatorBookmarkStrip` to dynamically recalculate `right` on every reposition tick and use mount-relative bounds for visibility checks instead of `window.innerWidth`/`window.innerHeight`.
+  - Added `repositionAllPaginatorStrips()` public method for bulk reposition after layout changes.
+  - Added `window.addEventListener('resize', updatePos)` with cleanup in `cleanupFn` — browser resize does not trigger `scroll`/`load`/`relocate`, so strips would drift without this.
+  - Added explicit double-rAF reposition call after `#applyPaginatorDisplayMode()` in the book/full display mode toggle — layout changes are not navigation events and `relocate` is not guaranteed to fire.
+  - Spec: Bug 1.1 in `Docs/feature-specs/08-Fixing-Bookmarks.md`.
+
+- **Position-Specific CFI for Continuous-Mode Bookmarks** (`packages/foliate-js/`) (June 2026):
+  - Fixed all bookmarks in the same chapter sharing an identical chapter-level CFI, which caused ID-swap collisions in `swapBookmarkId`, stacked strips in paginated/scrolled modes, and resume always landing at chapter start.
+  - Added `getChapterIframe(index)` getter to `ContinuousScrollManager` in `reader-continuous.js`.
+  - Added `getRangeAtViewportCenter(chapterWrapper)` to `BookmarkController` in `reader-bookmarks.js` — uses `caretRangeFromPoint` (Chromium/Safari) with `caretPositionFromPoint` (Firefox) fallback, then `elementFromPoint` as a last resort.
+  - Updated the bookmark button handler in `reader.js` to pass the viewport-center Range to `view.getCFI(idx, range)` instead of `null`, producing a CFI that encodes the exact DOM position (e.g. `epubcfi(/6/X!/4/2/1:42)`) rather than just the spine entry.
+  - No database or API changes — `cfi_range` already stores arbitrary CFI strings and all consumers (`resolveNavigation`, `#getBookmarkViewportRect`, resume logic) handle sub-chapter CFIs.
+  - Spec and bug map in `Docs/feature-specs/08-Fixing-Bookmarks.md`.
+
+- **Reader Modes UI Refactor** (`packages/foliate-js/`) (June 2026):
+  - Split the 2,830-line `reader.js` monolith into six focused ES modules plus a thin orchestrator (~1,168 lines).
+  - Extracted `reader-elements.js` (frozen `els` registry for all 35+ DOM IDs), `reader-continuous.js` (`ContinuousScrollManager`), `reader-paginated.js` (`PaginatedModeController`), `reader-annotations.js` (`AnnotationController`), `reader-bookmarks.js` (`BookmarkController`).
+  - All modules import `els` from `reader-elements.js` — no direct `document.getElementById` calls remain.
+  - Organized the `reader.html` `<style>` block into 18 labeled CSS sections matching the spec (design tokens, surfaces, chrome, sidebar, dialogs, popups, etc.).
+  - No changes to `page.tsx`, the postMessage API, or observable reader behavior — purely internal refactor.
+  - Full spec and verification checklist in `Docs/feature-specs/07-Reading-modes-UI-refactor.md` (all 28 items checked).
+
+- **Pricing Beta Banner** (`components/landing/PricingSection.tsx`) (June 2026):
+  - Added a "Currently available for free (beta)" pill banner below the "Start Pro free trial" button in the Pro pricing card.
 
 - **Search Bar `/` Shortcut Badge** (`components/layout/navbar.tsx`) (June 2026):
   - Added a `[/]` keyboard shortcut `<kbd>` badge inside the right side of the search input, matching the design in `Docs/screenshots/Search-bar-UI.png`.
