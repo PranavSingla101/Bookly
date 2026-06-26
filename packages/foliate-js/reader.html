@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self'; style-src 'self' blob: 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self' blob: data: *; frame-src blob: data:; object-src 'none'; form-action 'none';">
+<title>E-Book Reader</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. :root design tokens
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+    --reader-chrome: #e8e6e3;
+    --reader-chrome-muted: rgba(232, 230, 227, 0.55);
+    --reader-overlay: rgba(10, 10, 12, 0.78);
+    --reader-sidebar-bg: #141416;
+    --reader-sidebar-border: rgba(255, 255, 255, 0.08);
+    --reader-active-bg: rgba(255, 255, 255, 0.08);
+    --overlayer-highlight-opacity: 0.65;
+    --overlayer-highlight-blend-mode: normal;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. Base / reset
+   ═══════════════════════════════════════════════════════════════════════════ */
+html {
+    height: 100%;
+}
+body {
+    margin: 0;
+    min-height: 100%;
+    min-height: 100dvh;
+    height: 100%;
+    font: menu;
+    font-family: system-ui, sans-serif;
+    background: #0c0c0e;
+    color: var(--reader-chrome);
+    overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. Continuous scroll surface
+   ═══════════════════════════════════════════════════════════════════════════ */
+#cs-outer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    display: none;
+    background: #121214;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+}
+/* Book mode: show a visual "page" inside the dark surround */
+#cs-outer.cs-mode-book #cs-chapters {
+    max-width: 760px;
+    margin: 0 auto;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+    background: #1a1a1c;
+    min-height: 100vh;
+}
+/* Full mode: edge-to-edge, no centering */
+#cs-outer.cs-mode-full #cs-chapters {
+    max-width: none;
+    margin: 0;
+    background: transparent;
+}
+#cs-chapters {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
+    transition: max-width 0.25s ease;
+}
+.cs-chapter {
+    width: 100%;
+    flex-shrink: 0;
+    position: relative;
+}
+.cs-chapter iframe {
+    display: block;
+    width: 100%;
+    border: none;
+    min-height: 120px;
+    vertical-align: top;
+    /* Dark background prevents white flash before CSS is injected */
+    background: #121214;
+}
+.cs-chapter-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+    margin: 0;
+}
+.cs-sentinel {
+    height: 1px;
+    pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   4. Paginated / scrolled surface
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* Dedicated mount so the view always has a definite viewport-sized containing block */
+#foliate-mount {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    min-height: 100dvh;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+#foliate-mount foliate-view {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    box-sizing: border-box;
+    --paginator-margin-bg: #0c0c0e;
+    --paginator-marginal-display: none;
+}
+/* Book-mode page effect: foliate-view re-exports the paginator's 'filter' part
+   (the #background div) via exportparts="filter". #background sits behind ALL
+   shadow-DOM content so styling it cannot clip or overlay text.
+   The hard-stop gradient paints dark margins flanking a lighter reading column. */
+#foliate-mount.display-book-mode {
+    background: #0d0d0f;
+}
+#foliate-mount.display-book-mode foliate-view::part(filter) {
+    background: linear-gradient(
+        to right,
+        #0d0d0f var(--page-margin-width, 0px),
+        #1a1a1c var(--page-margin-width, 0px),
+        #1a1a1c calc(100% - var(--page-margin-width, 0px)),
+        #0d0d0f calc(100% - var(--page-margin-width, 0px))
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   5. Mode-switch overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+#reader-mode-switch-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0d0d0f;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease;
+}
+#reader-mode-switch-overlay.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+.reader-mode-switch-loader {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 3px solid rgba(255, 255, 255, 0.12);
+    border-top-color: #b5703a;
+    animation: reader-mode-switch-spin 850ms linear infinite;
+}
+@keyframes reader-mode-switch-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   6. Top bar chrome
+   ═══════════════════════════════════════════════════════════════════════════ */
+.reader-top-bar {
+    box-sizing: border-box;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    right: 0;
+    min-height: 52px;
+    padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 16px max(12px, env(safe-area-inset-left));
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background: linear-gradient(
+        to bottom,
+        rgba(8, 8, 10, 0.92) 0%,
+        rgba(8, 8, 10, 0.45) 55%,
+        transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 220ms ease;
+}
+.reader-top-bar:hover,
+.reader-top-bar:focus-within,
+.reader-top-bar.reader-top-bar--peek {
+    opacity: 1;
+}
+.reader-top-bar__inner {
+    position: relative;
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+    align-items: center;
+    pointer-events: auto;
+}
+.reader-top-bar__inner > button,
+.reader-top-bar__inner > .menu-container {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#side-bar-button {
+    margin-right: auto;
+}
+#menu-button {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.reader-top-bar__end {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+#close-button {
+    margin-left: 0;
+}
+.reader-top-bar button:not(.reader-layout-select-btn) {
+    padding: 8px;
+    border-radius: 10px;
+    background: transparent;
+    border: 0;
+    color: var(--reader-chrome-muted);
+    cursor: pointer;
+    line-height: 0;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+.reader-top-bar button:not(.reader-layout-select-btn):hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--reader-chrome);
+}
+.reader-top-bar button:not(.reader-layout-select-btn):focus-visible {
+    outline: 2px solid rgba(232, 230, 227, 0.45);
+    outline-offset: 2px;
+}
+#bookmark-button.bookmark-active .icon {
+    fill: currentcolor;
+}
+#aa-settings-button {
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   7. Layout mode dropdown
+   ═══════════════════════════════════════════════════════════════════════════ */
+.reader-layout-select-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 2px;
+}
+.reader-layout-select-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--reader-chrome-muted);
+    white-space: nowrap;
+}
+.reader-layout-dropdown {
+    position: relative;
+    min-width: min(42vw, 200px);
+    max-width: min(42vw, 220px);
+}
+/* Must override .reader-top-bar button (line-height: 0 collapses label text). */
+.reader-top-bar .reader-layout-select-btn {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    margin: 0;
+    padding: 7px 10px 7px 12px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.05) 100%);
+    color: var(--reader-chrome);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.35;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.reader-top-bar .reader-layout-select-btn:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.07) 100%);
+    color: var(--reader-chrome);
+}
+.reader-top-bar .reader-layout-select-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.3);
+    outline-offset: 2px;
+}
+.reader-top-bar .reader-layout-select-btn[aria-expanded="true"] {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+.reader-layout-select-btn__text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.reader-layout-select-btn__chevron {
+    flex-shrink: 0;
+    display: flex;
+    opacity: 0.85;
+    transition: transform 0.2s ease;
+}
+.reader-top-bar .reader-layout-select-btn[aria-expanded="true"] .reader-layout-select-btn__chevron {
+    transform: rotate(180deg);
+}
+.reader-layout-listbox {
+    position: absolute;
+    z-index: 1100;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #1a1a1f;
+    box-shadow:
+        0 4px 24px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+.reader-layout-listbox[hidden] {
+    display: none !important;
+}
+.reader-layout-option {
+    margin: 0;
+    padding: 9px 11px;
+    border-radius: 7px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.3;
+    color: var(--reader-chrome);
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+.reader-layout-option:hover,
+.reader-layout-option:focus-visible {
+    outline: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--reader-chrome);
+}
+.reader-layout-option--selected {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+.reader-layout-option--selected:hover,
+.reader-layout-option--selected:focus-visible {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+.reader-layout-select-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   8. View mode button (book / full toggle)
+   ═══════════════════════════════════════════════════════════════════════════ */
+#cs-view-mode-btn {
+    display: none;
+}
+#cs-view-mode-btn.cs-mode-visible {
+    display: flex;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   9. Sidebar
+   ═══════════════════════════════════════════════════════════════════════════ */
+#dimming-overlay {
+    visibility: hidden;
+    position: fixed;
+    z-index: 1001;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    transition: visibility 0s linear 300ms, opacity 300ms ease;
+}
+#dimming-overlay.show {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: 0s;
+}
+#side-bar {
+    visibility: hidden;
+    box-sizing: border-box;
+    position: fixed;
+    z-index: 1002;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: min(320px, 92vw);
+    transform: translateX(-100%);
+    display: flex;
+    flex-direction: column;
+    background: var(--reader-sidebar-bg);
+    color: var(--reader-chrome);
+    border-right: 1px solid var(--reader-sidebar-border);
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);
+    transition: visibility 0s linear 300ms, transform 300ms ease;
+}
+#side-bar.show {
+    visibility: visible;
+    transform: translateX(0);
+    transition-delay: 0s;
+}
+.side-bar-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--reader-sidebar-border);
+    flex-shrink: 0;
+}
+.side-bar-header__media {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    min-width: 0;
+    flex: 1;
+}
+#side-bar-cover {
+    height: 10vh;
+    min-height: 60px;
+    max-height: 120px;
+    width: auto;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 0;
+    background: #2a2a2e;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    flex-shrink: 0;
+}
+#side-bar-cover:not([src]) {
+    display: none;
+}
+.side-bar-header__text {
+    min-width: 0;
+}
+#side-bar-title {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+#side-bar-author {
+    margin: 0;
+    font-size: small;
+    color: var(--reader-chrome-muted);
+}
+.side-bar-info-btn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--reader-chrome-muted);
+    cursor: pointer;
+}
+.side-bar-info-btn:hover {
+    background: var(--reader-active-bg);
+    color: var(--reader-chrome);
+}
+.side-bar-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--reader-sidebar-border);
+    flex-shrink: 0;
+}
+.side-bar-tab {
+    flex: 1;
+    padding: 0.55rem 0.5rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--reader-chrome-muted);
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.side-bar-tab:hover {
+    color: var(--reader-chrome);
+}
+.side-bar-tab--active {
+    color: var(--reader-chrome);
+    border-bottom-color: #b5703a;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   10. TOC panel
+   ═══════════════════════════════════════════════════════════════════════════ */
+#toc-view {
+    padding: 0.5rem 0.25rem;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    color: var(--reader-chrome);
+}
+.toc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    color: var(--reader-chrome);
+}
+.toc-section-heading {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--reader-chrome-muted);
+    margin-top: 0.5rem;
+    margin-bottom: 0.15rem;
+    padding-right: 0.5rem;
+}
+.toc-chapter-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.55rem 0.5rem;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--reader-chrome);
+    font: inherit;
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+.toc-chapter-row:hover {
+    background: var(--reader-active-bg);
+}
+.toc-chapter-row--active {
+    background: rgba(255, 255, 255, 0.1);
+}
+.toc-chapter-row__title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.toc-chapter-row__meta {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    color: var(--reader-chrome-muted);
+    font-variant-numeric: tabular-nums;
+}
+.toc-empty {
+    font-size: 0.85rem;
+    color: var(--reader-chrome-muted);
+    padding: 0.75rem 0.5rem;
+    margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   11. Highlights panel
+   ═══════════════════════════════════════════════════════════════════════════ */
+#highlights-view {
+    padding: 0.5rem 0.25rem;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    display: none;
+}
+.highlights-empty {
+    font-size: 0.82rem;
+    color: var(--reader-chrome-muted);
+    padding: 1rem 0.75rem;
+    margin: 0;
+    line-height: 1.6;
+    white-space: pre-line;
+}
+.highlight-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    width: 100%;
+    padding: 0.6rem 0.5rem;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--reader-chrome);
+    font: inherit;
+    font-size: 0.82rem;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+.highlight-entry:hover {
+    background: var(--reader-active-bg);
+}
+.highlight-entry__chip {
+    flex-shrink: 0;
+    width: 4px;
+    min-height: 38px;
+    border-radius: 2px;
+    margin-top: 2px;
+    align-self: stretch;
+}
+.highlight-entry__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.highlight-entry__text {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-style: italic;
+    font-size: 0.8rem;
+    color: var(--reader-chrome);
+    line-height: 1.45;
+}
+.highlight-entry__note {
+    font-size: 0.72rem;
+    color: var(--reader-chrome-muted);
+    margin-top: 0.1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   12. Book info dialog
+   ═══════════════════════════════════════════════════════════════════════════ */
+#book-info-dialog {
+    border: 1px solid var(--reader-sidebar-border);
+    border-radius: 12px;
+    background: #1e1e22;
+    color: var(--reader-chrome);
+    padding: 0;
+    max-width: min(340px, 94vw);
+}
+#book-info-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+}
+.book-info-dialog__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--reader-sidebar-border);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+.book-info-dialog__body {
+    padding: 1rem;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    color: var(--reader-chrome-muted);
+}
+.book-info-dialog__close {
+    border: 0;
+    background: transparent;
+    color: var(--reader-chrome-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    line-height: 0;
+}
+.book-info-dialog__close:hover {
+    background: var(--reader-active-bg);
+    color: var(--reader-chrome);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   13. Font size menu
+   ═══════════════════════════════════════════════════════════════════════════ */
+.menu-container {
+    position: relative;
+}
+.menu,
+.menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.menu {
+    visibility: hidden;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 200px;
+    background: #1e1e22;
+    color: var(--reader-chrome);
+    border-radius: 10px;
+    border: 1px solid var(--reader-sidebar-border);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    padding: 8px;
+    cursor: default;
+}
+.menu.show {
+    visibility: visible;
+}
+.menu li {
+    padding: 8px 12px 8px 28px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+.menu li:hover {
+    background: var(--reader-active-bg);
+}
+.menu li[aria-checked="true"] {
+    background-position: center left 8px;
+    background-repeat: no-repeat;
+    background-image: url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%223%22%20fill%3D%22%23e8e6e3%22%2F%3E%3C%2Fsvg%3E');
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   14. Selection / annotation popup
+   ═══════════════════════════════════════════════════════════════════════════ */
+.selection-popup {
+    position: fixed;
+    z-index: 1200;
+    display: none;
+    align-items: center;
+    gap: 2px;
+    background: #1e1e22;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 4px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+}
+.selection-popup__colors {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 5px;
+}
+.selection-popup__color {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: transform 0.1s ease, border-color 0.1s ease;
+}
+.selection-popup__color:hover {
+    transform: scale(1.2);
+    border-color: rgba(255, 255, 255, 0.45);
+}
+.selection-popup__color--active {
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: scale(1.1);
+}
+.selection-popup__delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #f87171;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: 2px;
+    transition: background 0.1s ease, transform 0.1s ease;
+}
+.selection-popup__delete:hover {
+    background: rgba(248, 113, 113, 0.18);
+    transform: scale(1.2);
+}
+.selection-popup__divider {
+    width: 1px;
+    height: 22px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0 1px;
+    flex-shrink: 0;
+}
+.selection-popup__btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--reader-chrome);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.12s ease;
+}
+.selection-popup__btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+.selection-popup__btn svg {
+    flex-shrink: 0;
+    stroke: currentColor;
+    fill: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   15. Note input dialog
+   ═══════════════════════════════════════════════════════════════════════════ */
+#note-input-dialog {
+    border: 1px solid var(--reader-sidebar-border);
+    border-radius: 12px;
+    background: #1e1e22;
+    color: var(--reader-chrome);
+    padding: 0;
+    width: min(360px, 94vw);
+}
+#note-input-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.55);
+}
+.note-dialog__header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--reader-sidebar-border);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+#note-input-textarea {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 100px;
+    background: #141416;
+    border: 0;
+    border-bottom: 1px solid var(--reader-sidebar-border);
+    color: var(--reader-chrome);
+    font: inherit;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    padding: 0.75rem 1rem;
+    resize: vertical;
+    outline: none;
+}
+#note-input-textarea::placeholder {
+    color: var(--reader-chrome-muted);
+}
+.note-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+}
+.note-dialog__btn {
+    padding: 0.45rem 0.9rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+.note-dialog__btn--cancel {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--reader-chrome-muted);
+}
+.note-dialog__btn--cancel:hover {
+    background: var(--reader-active-bg);
+    color: var(--reader-chrome);
+}
+.note-dialog__btn--save {
+    background: #3b82f6;
+    color: #fff;
+}
+.note-dialog__btn--save:hover {
+    background: #2563eb;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   16. Bookmark strip
+   ═══════════════════════════════════════════════════════════════════════════ */
+.bookmark-strip {
+    pointer-events: all;
+    user-select: none;
+    box-sizing: border-box;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   17. Toast
+   ═══════════════════════════════════════════════════════════════════════════ */
+#reader-toast {
+    position: fixed;
+    z-index: 1300;
+    bottom: max(1.25rem, env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%) translateY(calc(100% + 1rem));
+    background: #27272a;
+    color: #e4e4e7;
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
+    white-space: nowrap;
+    max-width: calc(100vw - 2rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    transition: transform 240ms cubic-bezier(0.22, 0.72, 0.2, 1);
+}
+#reader-toast.reader-toast--visible {
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   18. Drop target / empty state
+   ═══════════════════════════════════════════════════════════════════════════ */
+#drop-target {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    visibility: hidden;
+    color: var(--reader-chrome);
+}
+#drop-target h1 {
+    font-weight: 900;
+}
+#file-button {
+    font: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+    cursor: pointer;
+    color: inherit;
+}
+.icon {
+    display: block;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 2px;
+}
+.empty-state-icon {
+    margin: auto;
+}
+
+/* ── Mobile adjustments ─────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+    #side-bar {
+        width: 100vw;
+        max-width: 100vw;
+    }
+    .selection-popup {
+        position: fixed;
+        bottom: max(1.5rem, env(safe-area-inset-bottom));
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        top: auto !important;
+    }
+    .reader-top-bar button:not(.reader-layout-select-btn) {
+        padding: 10px;
+    }
+    .reader-layout-select-label {
+        display: none;
+    }
+}
+</style>
+<input type="file" id="file-input" hidden>
+<div id="foliate-mount" aria-hidden="true"></div>
+<div id="cs-outer" aria-hidden="true">
+    <div id="cs-chapters"></div>
+</div>
+<div id="reader-mode-switch-overlay" role="status" aria-live="polite" aria-label="Changing reading layout">
+    <div class="reader-mode-switch-loader" aria-hidden="true"></div>
+</div>
+<div id="drop-target" class="filter">
+    <div>
+        <svg class="icon empty-state-icon" width="72" height="72" aria-hidden="true">
+            <path d="M36 18s-6-6-12-6-15 6-15 6v42s9-6 15-6 12 6 12 6c4-4 8-6 12-6s12 2 15 6V18c-6-4-12-6-15-6-4 0-8 2-12 6m0 0v42"/>
+        </svg>
+        <h1>Drop a book here!</h1>
+        <p>Or <button id="file-button">choose a file</button> to open it.</p>
+    </div>
+</div>
+<div id="dimming-overlay" aria-hidden="true"></div>
+<div id="side-bar">
+    <div id="side-bar-header" class="side-bar-header">
+        <div class="side-bar-header__media">
+            <img id="side-bar-cover" alt="">
+            <div class="side-bar-header__text">
+                <h1 id="side-bar-title"></h1>
+                <p id="side-bar-author"></p>
+            </div>
+        </div>
+        <button type="button" id="side-bar-info" class="side-bar-info-btn" aria-label="Book information" title="Book information">
+            <svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 16v-4M12 8h.01" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+    <div class="side-bar-tabs">
+        <button type="button" id="sidebar-tab-toc" class="side-bar-tab side-bar-tab--active">Contents</button>
+        <button type="button" id="sidebar-tab-highlights" class="side-bar-tab">Highlights</button>
+    </div>
+    <div id="toc-view"></div>
+    <div id="highlights-view"></div>
+</div>
+<dialog id="book-info-dialog">
+    <div class="book-info-dialog__header">
+        <span>About this book</span>
+        <button type="button" class="book-info-dialog__close" id="book-info-dialog-close" aria-label="Close">
+            <svg class="icon" width="20" height="20" aria-hidden="true">
+                <path d="M 6 6 L 18 18 M 18 6 L 6 18"/>
+            </svg>
+        </button>
+    </div>
+    <div class="book-info-dialog__body" id="book-info-dialog-body"></div>
+</dialog>
+<!-- Note input dialog -->
+<dialog id="note-input-dialog">
+    <div class="note-dialog__header">Add a note</div>
+    <textarea id="note-input-textarea" placeholder="Write your note here…" rows="4"></textarea>
+    <div class="note-dialog__actions">
+        <button type="button" id="note-input-cancel" class="note-dialog__btn note-dialog__btn--cancel">Cancel</button>
+        <button type="button" id="note-input-save" class="note-dialog__btn note-dialog__btn--save">Save note</button>
+    </div>
+</dialog>
+<!-- In-reader toast notification -->
+<div id="reader-toast" role="status" aria-live="polite"></div>
+<div id="reader-top-bar" class="reader-top-bar" role="toolbar" aria-label="Reader controls">
+    <div class="reader-top-bar__inner">
+        <button type="button" id="side-bar-button" aria-label="Table of contents">
+            <svg class="icon" width="24" height="24" aria-hidden="true">
+                <path d="M 4 6 h 16 M 4 12 h 16 M 4 18 h 16"/>
+            </svg>
+        </button>
+        <div id="menu-button" class="menu-container">
+            <button type="button" id="aa-settings-button" aria-label="Text size" aria-haspopup="true">Aa</button>
+        </div>
+        <div class="reader-top-bar__end">
+            <!-- CS view-mode toggle (book / full) — hidden unless in continuous mode -->
+            <button type="button" id="cs-view-mode-btn" aria-label="Toggle layout mode" title="Toggle layout mode">
+                <!-- compress icon (shown in full mode — click to go back to book) -->
+                <svg id="cs-icon-book" class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="display:none">
+                    <polyline points="4 14 10 14 10 20"/>
+                    <polyline points="20 10 14 10 14 4"/>
+                    <line x1="10" y1="14" x2="3" y2="21"/>
+                    <line x1="21" y1="3" x2="14" y2="10"/>
+                </svg>
+                <!-- full icon (shown in book mode — click to go full) -->
+                <svg id="cs-icon-full" class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                    <polyline points="15 3 21 3 21 9"/>
+                    <polyline points="9 21 3 21 3 15"/>
+                    <line x1="21" y1="3" x2="14" y2="10"/>
+                    <line x1="3" y1="21" x2="10" y2="14"/>
+                </svg>
+            </button>
+            <!-- Bookmark button -->
+            <button type="button" id="bookmark-button" aria-label="Bookmark this page" title="Bookmark this page">
+                <svg class="icon" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                </svg>
+            </button>
+            <div class="reader-layout-select-wrap" id="reader-layout-select-wrap">
+                <label id="reader-layout-label" for="reader-layout-trigger" class="reader-layout-select-label">Layout</label>
+                <div class="reader-layout-dropdown">
+                    <button
+                        type="button"
+                        id="reader-layout-trigger"
+                        class="reader-layout-select-btn"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-controls="reader-layout-listbox"
+                        title="Reading layout"
+                    >
+                        <span id="reader-layout-trigger-value" class="reader-layout-select-btn__text">Continuous scroll</span>
+                        <span class="reader-layout-select-btn__chevron" aria-hidden="true">
+                            <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </span>
+                    </button>
+                    <ul id="reader-layout-listbox" class="reader-layout-listbox" role="listbox" aria-labelledby="reader-layout-label" hidden>
+                        <li role="option" class="reader-layout-option" tabindex="-1" data-value="paginated">Paginated</li>
+                        <li role="option" class="reader-layout-option" tabindex="-1" data-value="scrolled">Scrolled</li>
+                        <li role="option" class="reader-layout-option reader-layout-option--selected" tabindex="-1" data-value="continuous">Continuous scroll</li>
+                    </ul>
+                    <select id="reader-layout-mode" class="reader-layout-select-sr-only" tabindex="-1" aria-hidden="true">
+                        <option value="paginated">Paginated</option>
+                        <option value="scrolled">Scrolled</option>
+                        <option value="continuous" selected>Continuous scroll</option>
+                    </select>
+                </div>
+            </div>
+            <button type="button" id="close-button" aria-label="Close book and return to library">
+                <svg class="icon" width="24" height="24" aria-hidden="true">
+                    <path d="M 6 6 L 18 18 M 18 6 L 6 18"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+<script src="reader.js" type="module"></script>
